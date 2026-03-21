@@ -1289,15 +1289,16 @@ void Adafruit_GFX::writeHebrew(uint8_t c) {
     return;
   }
 
-  if (c == '\n') {
-    cursor_x  = _width;
+  if (c == '\n') 
+  {
+    cursor_x = _width;
     cursor_y += (int16_t)textsize_y * (uint8_t)pgm_read_byte(&gfxFont->yAdvance);
     return;
-  } 
+  }
 
   uint8_t first = pgm_read_byte(&gfxFont->first);
-  uint8_t last = pgm_read_byte(&gfxFont->last);
-  if (c < first || c > last)
+  uint8_t last  = pgm_read_byte(&gfxFont->last);
+  if (c < first || c > last) 
   {
     return;
   }
@@ -1310,18 +1311,20 @@ void Adafruit_GFX::writeHebrew(uint8_t c) {
     return;
   }
 
-  int16_t xo = (int8_t)pgm_read_byte(&glyph->xOffset);
-  if (wrap && ((cursor_x - textsize_x * (xo + w)) < 0)) 
+  int16_t xo  = (int8_t)pgm_read_byte(&glyph->xOffset);
+  int16_t adv = (uint8_t)pgm_read_byte(&glyph->xAdvance) * (int16_t)textsize_x;
+
+  int16_t drawX = cursor_x - adv;
+
+  if (wrap && (drawX + xo * (int16_t)textsize_x < 0)) 
   {
     cursor_x = _width;
-    cursor_y += (int16_t)textsize_y *
-                (uint8_t)pgm_read_byte(&gfxFont->yAdvance);
+    cursor_y += (int16_t)textsize_y * (uint8_t)pgm_read_byte(&gfxFont->yAdvance);
+    drawX = cursor_x - adv;
   }
-  drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize_x,
-            textsize_y);
 
-  cursor_x -= (uint8_t)pgm_read_byte(&glyph->xAdvance) * (int16_t)textsize_x;
-
+  drawChar(drawX, cursor_y, c, textcolor, textbgcolor, textsize_x, textsize_y);
+  cursor_x = drawX;
 }
 
 namespace HebConstants {
