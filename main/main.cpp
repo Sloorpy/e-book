@@ -28,15 +28,12 @@ extern "C" void app_main(void)
     display.setCursor(HEBREW_START_X, HEBREW_START_Y);
     display.printHebrew("אבגדהוזחטיכלמנסעפצקרשת");
     display.printHebrew("ךםןףץ");
-
-    display.setCursor(HEBREW_START_X, HEBREW_START_Y + HEBREW_CHAR_Y_SIZE * 2);
-    display.printHebrew("ואוא ולול");
     //display.printHebrew("הואעולהכלבוקרעלאוטובוסיםעצובים");
-    display.setCursor(390, HEBREW_START_Y + HEBREW_CHAR_Y_SIZE * 4);
+    display.setCursor(390, HEBREW_START_Y + HEBREW_CHAR_Y_SIZE * 2);
     //display.printHebrew("אפילו הם יודעים לבכות היום");
     display.printHebrew("אני רוצה to commit סואסייד");
-    display.setCursor(0, 40);
-    display.println("to commit");
+    // display.setCursor(0, 40);
+    // display.println("to commit");
     printf("Updating display...\n");
     display.update();
     printf("Done!\n");
