@@ -1,0 +1,10 @@
+{
+  "C_Cpp.default.configurationProvider": "espressif.esp-idf-extension",
+  "idf.adapterTargetName": "esp32",
+  "idf.customExtraPaths": "${env:IDF_PATH}/tools;/opt/esp-tools:/home/${env:USER}/esp-tools",
+  "idf.customExtraVars": {
+    "PATH": "/opt/esp-tools/xtensa-esp-elf/esp-13.2.0_20250523/xtensa-esp-elf/bin:/opt/esp-tools/esp-rom-ulabels/bin:/opt/esp-tools/esptool_py/bi"
+  },
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.cStandard": "c11"
+}

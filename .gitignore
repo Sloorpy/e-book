@@ -1,0 +1,10 @@
+sdkconfig.old
+dependencies.lock
+*.pyc
+__pycache__/
+# .vscode/ - kept but paths use env vars
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
