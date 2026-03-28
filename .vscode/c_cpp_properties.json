@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "ESP-IDF",
+            "compilerPath": "/home/alon/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20251107/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc",
+            "compileCommands": [
+                "${workspaceFolder}/build/compile_commands.json"
+            ],
+            "includePath": [
+                "/home/alon/esp/esp-idf/components/**",
+                "${workspaceFolder}/**"
+            ],
+            "browse": {
+                "path": [
+                    "/home/alon/esp/esp-idf/components",
+                    "${workspaceFolder}"
+                ]
+            },
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

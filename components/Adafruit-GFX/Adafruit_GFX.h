@@ -172,10 +172,6 @@ public:
 
   virtual size_t write(uint8_t);
 
-  void printHebrew(const char *str);
-  void writeHebrew(uint8_t c);
-
-
   /************************************************************************/
   /*!
     @brief      Get width of the display, accounting for current rotation
