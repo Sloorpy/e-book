@@ -28,7 +28,7 @@ void Book::display_title() const
     _text_box->printHebrew(get_title().c_str());
 
     _text_box->setTextSize(2);
-    _text_box->setCursor(300, 370);
+    _text_box->setCursor(300, 380);
     _text_box->printHebrew(get_author().c_str());
 }
 

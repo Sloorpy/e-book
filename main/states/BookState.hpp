@@ -19,5 +19,6 @@ private:
 
 private:
     std::unique_ptr<Book> _book;
+    std::shared_ptr<SDManager> _sd;
 };
 
