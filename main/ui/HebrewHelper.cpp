@@ -1,5 +1,4 @@
 #include "HebrewHelper.hpp"
-#include "Display.hpp"
 #include <cstdint>
 
 bool HebrewHelper::isHebrewUtf8Byte(uint8_t letter) {
@@ -32,21 +31,14 @@ uint8_t HebrewHelper::getHebChar(const char* str, uint32_t i) {
 uint32_t HebrewHelper::countEnglishRtl(const char* str, uint32_t start) {
     uint32_t end = start;
 
-    while (str[end] != '\0' && !isHebrewUtf8Byte((uint8_t)str[end])) {
+    while (str[end] != '\0' &&
+           str[end] != '\n' &&
+           str[end] != '\r' &&
+           !isHebrewUtf8Byte(static_cast<uint8_t>(str[end]))) {
         ++end;
     }
 
-    if (end == start) {
-        return 0;
-    }
-
-    --end;
-
-    while (end > start && (uint8_t)str[end] == ' ') {
-        --end;
-    }
-
-    return end - start + 1;
+    return end - start;
 }
 
 std::vector<FontIndex> HebrewHelper::process(const char* str) {
@@ -56,7 +48,7 @@ std::vector<FontIndex> HebrewHelper::process(const char* str) {
     constexpr uint8_t INVALID_HEB_CHAR = 0;
 
     while (str[i] != '\0') {
-        const uint8_t ch = (uint8_t)str[i];
+        const uint8_t ch = static_cast<uint8_t>(str[i]);
 
         if (isHebrewUtf8Byte(ch)) {
             const uint8_t he_char = getHebChar(str, i);
@@ -68,9 +60,9 @@ std::vector<FontIndex> HebrewHelper::process(const char* str) {
         }
 
         if (isAsciiLetter(ch)) {
-            uint32_t count = countEnglishRtl(str, i);
+            const uint32_t count = countEnglishRtl(str, i);
             for (uint32_t j = count; j > 0; --j) {
-                result.push_back({(uint8_t)str[i + j - 1], true});
+                result.push_back({static_cast<uint8_t>(str[i + j - 1]), true});
             }
             i += count;
             continue;
@@ -79,57 +71,6 @@ std::vector<FontIndex> HebrewHelper::process(const char* str) {
         result.push_back({ch, false});
         ++i;
     }
-
-    return result;
-}
-
-CursorCalculation HebrewHelper::calculateCursor(const Display& display, uint8_t letter, bool is_rtl) {
-    CursorCalculation result;
-    result.draw_x = display.cursor_x;
-    result.draw_y = display.cursor_y;
-    result.next_x = display.cursor_x;
-    result.next_y = display.cursor_y;
-
-    if (letter == '\r') {
-        return result;
-    }
-
-    if (letter == '\n') {
-        result.next_x = display._width;
-        result.next_y = display.cursor_y + static_cast<int16_t>(display.textsize_y) * display.gfxFont->yAdvance;
-        return result;
-    }
-
-    const uint8_t first = display.gfxFont->first;
-    const uint8_t last = display.gfxFont->last;
-
-    if (letter < first || letter > last) {
-        return result;
-    }
-
-    const GFXglyph* const glyph = display.gfxFont->glyph + letter - first;
-    const uint8_t letter_width = glyph->width;
-    const uint8_t letter_height = glyph->height;
-
-    if (letter_width == 0 || letter_height == 0) {
-        return result;
-    }
-
-    const int16_t xo = static_cast<int16_t>(glyph->xOffset);
-    const int16_t adv = static_cast<int16_t>(glyph->xAdvance) * static_cast<int16_t>(display.textsize_x);
-
-    int16_t draw_x = is_rtl ? display.cursor_x : display.cursor_x - adv;
-    int16_t draw_y = display.cursor_y;
-
-    if (display.wrap && (draw_x + xo * static_cast<int16_t>(display.textsize_x) < 0)) {
-        draw_x = display._width;
-        draw_y = display.cursor_y + static_cast<int16_t>(display.textsize_y) * display.gfxFont->yAdvance;
-    }
-
-    result.draw_x = draw_x;
-    result.draw_y = draw_y;
-    result.next_x = is_rtl ? draw_x + adv : draw_x;
-    result.next_y = draw_y;
 
     return result;
 }

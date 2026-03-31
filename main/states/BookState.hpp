@@ -15,8 +15,7 @@ public:
     virtual void on_hold() override;   
     
 private:
-    void display_title() const;
-    void no_more_pages() const;
+    std::unique_ptr<Book> create_book(const std::string_view& book_name, std::shared_ptr<SDManager> sd);
 
 private:
     std::unique_ptr<Book> _book;

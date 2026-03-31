@@ -17,6 +17,11 @@ std::string PageManager::get_cover() const
     return File(_sd, book_file_path("cover")).read_all();
 }
 
+std::string PageManager::get_chapter_title(const uint16_t chapter_num) const
+{
+    return File(_sd, chapter_file_path(chapter_num, "chapter")).read_all();
+}
+
 uint16_t PageManager::chapter_count() const
 {
     if (_chapters_count > 0) {
@@ -78,12 +83,19 @@ std::string PageManager::chapter_file_path(uint16_t chapter_num, const std::stri
 
 Chapter PageManager::load_chapter(const uint16_t chapter_num)
 {
+    if (chapter_num > chapter_count())
+    {
+        throw std::runtime_error("Error: Tried to get invalid chapter");
+    }
+
     const std::string pages_path = chapter_file_path(chapter_num, "pages");
     const std::string chapter_path = chapter_file_path(chapter_num, "chapter");
 
-    return Chapter {
-        File(_sd, pages_path).read_all_bytes(),
+    static constexpr size_t START_OFFSET = 0;
+    return Chapter{
+        File(_sd, pages_path).read_all(),
         File(_sd, chapter_path).read_all(),
+        START_OFFSET,
         chapter_num
-    };
+    };;
 }

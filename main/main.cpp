@@ -14,7 +14,7 @@
 #include <memory>
 
 static constexpr std::string_view MAIN_TAG = "Main";
-static constexpr std::string_view BOOK_NAME = "percy_1_heb";
+static constexpr std::string_view BOOK_NAME = "percy_2_heb";
 
 std::shared_ptr<SPI> g_spi = nullptr;
 std::shared_ptr<SDManager> g_sd = nullptr;

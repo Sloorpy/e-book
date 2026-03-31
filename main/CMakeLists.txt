@@ -8,6 +8,7 @@ idf_component_register(SRCS
     "book/PageManager.cpp"
     "ui/HebrewHelper.cpp"
     "ui/Display.cpp"
+    "ui/TextBox.cpp"
     "states/ProgramState.cpp"
     "states/BookState.cpp"
     

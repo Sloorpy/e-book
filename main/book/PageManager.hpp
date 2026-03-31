@@ -8,9 +8,10 @@
 #include <vector>
 
 struct Chapter final {
-    std::vector<uint8_t> pages;
+    std::string pages;
     std::string chapter_title;
-    size_t pages_offset = 0;
+    size_t pages_offset;
+    uint16_t num;
 };
 
 class PageManager final {
@@ -19,6 +20,8 @@ public:
 
 public:
     std::string get_cover() const;
+    std::string get_chapter_title(const uint16_t chapter_num) const;
+
     Chapter load_chapter(const uint16_t chapter_num);
     uint16_t chapter_count() const;
 

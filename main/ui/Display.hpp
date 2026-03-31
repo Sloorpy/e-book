@@ -1,7 +1,6 @@
 #pragma once
 #include "SPI.hpp"
 #include "Adafruit_GFX.h"
-#include "HebrewHelper.hpp"
 
 #include <stdint.h>
 #include <driver/spi_master.h>
@@ -24,14 +23,11 @@ public:
     void update();
     void deep_sleep();
     void fill_screen(const Color color);
-    void print_hebrew(const char *str);
-    void hebrew_screen();
     void drawPixel(int16_t x, int16_t y, uint16_t color);
-    GFXfont* get_font() const;
+    GFXfont* getFont();
 
 private:
     spi_device_handle_t initialize_hardware();
-    void initialize_font();
     void reset();
     void waitBusy();
     void sendCmd(uint8_t cmd);
@@ -39,12 +35,8 @@ private:
     void wakeUp();
 
 private:
-  void writeHebrew(uint8_t letter, bool is_rtl = false);
-
-private:
     std::shared_ptr<SPI> _spi;
     const spi_device_handle_t _handle;
-    friend class HebrewHelper;
 
 private:
     static constexpr uint16_t _WIDTH  = 400;

@@ -1,41 +1,44 @@
 #pragma once
 #include "File.hpp"
 #include "PageManager.hpp"
-#include "Display.hpp"
+#include "TextBox.hpp"
 
-#include "Adafruit_GFX.h"
 #include <string_view>
 #include <cstdint>
 
-struct ReadingState {
-    uint16_t chapter;
-    size_t page_offset;
-};
-
 class Book final {
 public:
-    explicit Book(const std::string_view& book_name, std::shared_ptr<SDManager> sd_reader, const Display& display);
+    explicit Book(std::shared_ptr<Display> display, const std::string_view& book_name, std::shared_ptr<SDManager> sd_reader);
     ~Book() = default;
 
 public:
-    std::string get_page();
-    void next_page();
+    void read_page();
     void prev_page();
-    std::string get_title();
-    std::string get_author();
 
+public:
+    void display_title() const;
+    void no_more_pages() const;
+    
 public:
     bool has_next_page() const;
     bool has_prev_page() const;
-    ReadingState get_state() const;
+
+private:
+    void display_chapter_title() const;
+    std::string get_title() const;
+    std::string get_author() const;
+    
+private:
+    static std::unique_ptr<TextBox> create_text_box(std::shared_ptr<Display> display);
 
 private:
     PageManager _page_manager;
-    std::vector<Chapter> _chapters;
-    const Display& _display;
-    ReadingState _state;
+    std::unique_ptr<TextBox> _text_box;
 
 private:
+    Chapter _current_chapter;
+
+public:
     static constexpr uint16_t PAGE_WIDTH = 300;
     static constexpr uint16_t PAGE_HEIGHT = 400;
 

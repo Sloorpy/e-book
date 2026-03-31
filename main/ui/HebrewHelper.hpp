@@ -15,21 +15,19 @@ namespace HebConstants {
     constexpr uint8_t ASCII_SPACE = ' ';
 }
 
-class Display;
-
-struct CursorCalculation {
-    int16_t draw_x;
-    int16_t draw_y;
-    int16_t next_x;
-    int16_t next_y;
-};
+enum class WritingDirection { RTL, LTR };
 
 class HebrewHelper {
 public:
     static bool isHebrewUtf8Byte(uint8_t letter);
     static bool isAsciiLetter(uint8_t letter);
     static uint8_t getHebChar(const char* str, uint32_t i);
+
+    // Counts a contiguous non-Hebrew run until Hebrew/newline/null.
+    // This is now used for block printing while preserving original byte offsets.
     static uint32_t countEnglishRtl(const char* str, uint32_t start);
+
+    // You can keep this if other code still uses it, but TextBox::printHebrew()
+    // should no longer rely on it for paging/resume offsets.
     static std::vector<FontIndex> process(const char* str);
-    static CursorCalculation calculateCursor(const Display& display, uint8_t letter, bool is_rtl);
 };

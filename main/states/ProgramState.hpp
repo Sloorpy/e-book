@@ -1,12 +1,12 @@
 #pragma once
 #include "Book.hpp"
-#include "Display.hpp"
 #include "Button.hpp"
+#include "Display.hpp"
 
 class ProgramState 
 {
 protected:
-    explicit ProgramState(std::unique_ptr<Display> display);
+    explicit ProgramState(std::shared_ptr<Display> display);
 
 public:
     virtual ~ProgramState() = default;
@@ -18,8 +18,8 @@ public:
     virtual void on_hold() = 0;
 
 public:
-    std::unique_ptr<Display> give_up_display();
+    std::shared_ptr<Display> get_display();
     
 protected:
-    std::unique_ptr<Display> _display;
+    std::shared_ptr<Display> _display;
 };

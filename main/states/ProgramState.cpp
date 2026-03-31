@@ -1,9 +1,9 @@
 #include "ProgramState.hpp"
 
-ProgramState::ProgramState(std::unique_ptr<Display> display) :
-    _display(std::move(display)) {}
+ProgramState::ProgramState(std::shared_ptr<Display> display) :
+    _display(display) {}
 
-std::unique_ptr<Display> ProgramState::give_up_display()
+std::shared_ptr<Display> ProgramState::get_display()
 {
-    return std::move(_display);
+    return _display;
 }

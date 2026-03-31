@@ -2,16 +2,12 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "Fonts/hebEng5x7avia.h"
-#include <Fonts/FreeMonoBold9pt7b.h>
-#include "HebrewHelper.hpp"
 
 Display::Display(std::shared_ptr<SPI> spi) :
     GFXcanvas1(_WIDTH, _HEIGHT),
     _spi(spi),
     _handle(initialize_hardware())
 {
-    initialize_font();
     wakeUp();        
     fill_screen(Color::WHITE);
     setRotation(1);
@@ -44,17 +40,6 @@ spi_device_handle_t Display::initialize_hardware()
     devcfg.mode = 0;
 
     return _spi->add_device(devcfg);
-}
-
-void Display::initialize_font()
-{
-    setTextColor(static_cast<uint8_t>(Color::BLACK));
-    setFont(&hebEng5x7avia);
-
-    static constexpr uint16_t HEBREW_START_X = 300;
-    static constexpr uint16_t HEBREW_START_Y = 0;
-    setCursor(HEBREW_START_X, HEBREW_START_Y);
-    setTextSize(2);
 }
 
 void Display::reset() {
@@ -183,10 +168,6 @@ void Display::drawPixel(int16_t x, int16_t y, uint16_t color)
     }
     
 }
-GFXfont *Display::get_font() const
-{
-    return gfxFont;
-}
 
 void Display::update()
 {
@@ -217,46 +198,6 @@ void Display::deep_sleep() {
     sendData(0x01);
 }
 
-void Display::writeHebrew(uint8_t letter, bool is_rtl) {
-    if (letter == '\r') {
-        return;
-    }
-
-    const uint8_t first = gfxFont->first;
-    const uint8_t last = gfxFont->last;
-    if (letter != '\n' && (letter < first || letter > last)) {
-        return;
-    }
-
-    if (letter != '\n') {
-        const GFXglyph* const glyph = gfxFont->glyph + letter - first;
-        if (glyph->width == 0 || glyph->height == 0) {
-            return;
-        }
-    }
-
-    const CursorCalculation calc = HebrewHelper::calculateCursor(*this, letter, is_rtl);
-
-    if (letter != '\n') {
-        drawChar(calc.draw_x, calc.draw_y, letter, textcolor, textbgcolor, textsize_x, textsize_y);
-    }
-
-    cursor_x = calc.next_x;
-    cursor_y = calc.next_y;
-}
-
-void Display::print_hebrew(const char* str) {
-    const std::vector<FontIndex> chars = HebrewHelper::process(str);
-    for (const FontIndex& ch : chars) {
-        writeHebrew(ch.index, ch.is_rtl);
-    }
-}
-
-void Display::hebrew_screen()
-{
-    setFont(&hebEng5x7avia);
-    setTextSize(2);
-    setTextColor(static_cast<uint8_t>(Color::BLACK));
-    static constexpr uint16_t Y_AXIS = 2;
-    setCursor(width(), Y_AXIS);
+GFXfont* Display::getFont() {
+    return gfxFont;
 }
