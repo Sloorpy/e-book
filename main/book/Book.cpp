@@ -1,5 +1,5 @@
 #include "Book.hpp"
-#include "HebrewHelper.hpp"
+#include "TextHelper.hpp"
 #include "Fonts/hebEng5x7avia.h"
 #include "Display.hpp"
 #include <esp_log.h>

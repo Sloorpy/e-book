@@ -2,6 +2,7 @@
 #include "Display.hpp"
 #include <Fonts/hebEng5x7avia.h>
 #include <cstdint>
+
 TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t left,
                  int16_t top,
@@ -59,7 +60,6 @@ void TextBox::setTextColor(uint8_t color, uint8_t bg) {
     _textbgcolor = bg;
 }
 
-
 int16_t TextBox::line_height() const {
     if (_font == nullptr) {
         return 0;
@@ -103,6 +103,277 @@ bool TextBox::get_glyph_metrics(uint8_t letter,
     return true;
 }
 
+bool TextBox::get_glyph_metrics(uint8_t letter, GlyphMetrics& metrics) const {
+    return get_glyph_metrics(
+        letter,
+        metrics.advance,
+        metrics.x_offset,
+        metrics.glyph_bottom_offset
+    );
+}
+
+bool TextBox::move_to_next_line() {
+    const int16_t next_y = _cursor_y + line_height();
+    if (next_y > _bottom) {
+        return false;
+    }
+
+    _cursor_x = line_start_x();
+    _cursor_y = next_y;
+    return true;
+}
+
+bool TextBox::handle_newline() {
+    return move_to_next_line();
+}
+
+bool TextBox::try_place_rtl_flow_glyph(const GlyphMetrics& metrics,
+                                       GlyphPlacement& placement) const {
+    placement.draw_y = _cursor_y;
+    placement.draw_x = (_direction == WritingDirection::RTL)
+        ? (_cursor_x - metrics.advance)
+        : _cursor_x;
+
+    const int16_t glyph_left =
+        placement.draw_x +
+        metrics.x_offset * static_cast<int16_t>(_textsize_x);
+
+    const int16_t glyph_right = glyph_left + metrics.advance;
+
+    const bool need_wrap = (_direction == WritingDirection::RTL)
+        ? (glyph_left < _left)
+        : (glyph_right > _right);
+
+    if (need_wrap) {
+        placement.draw_y += line_height();
+        if (placement.draw_y > _bottom) {
+            return false;
+        }
+
+        placement.draw_x = (_direction == WritingDirection::RTL)
+            ? (_right - metrics.advance)
+            : _left;
+    }
+
+    const int16_t glyph_bottom = placement.draw_y + metrics.glyph_bottom_offset;
+    if (glyph_bottom > _bottom) {
+        return false;
+    }
+
+    placement.next_x = (_direction == WritingDirection::RTL)
+        ? placement.draw_x
+        : static_cast<int16_t>(placement.draw_x + metrics.advance);
+
+    placement.next_y = placement.draw_y;
+    return true;
+}
+
+void TextBox::draw_glyph(uint8_t letter, const GlyphPlacement& placement) {
+    _display->drawChar(
+        placement.draw_x,
+        placement.draw_y,
+        letter,
+        _textcolor,
+        _textbgcolor,
+        _textsize_x,
+        _textsize_y
+    );
+
+    _cursor_x = placement.next_x;
+    _cursor_y = placement.next_y;
+}
+
+void TextBox::draw_rtl_flow_glyph(uint8_t letter) {
+    GlyphMetrics metrics{};
+    if (!get_glyph_metrics(letter, metrics)) {
+        return;
+    }
+
+    GlyphPlacement placement{};
+    if (!try_place_rtl_flow_glyph(metrics, placement)) {
+        return;
+    }
+
+    draw_glyph(letter, placement);
+}
+
+void TextBox::draw_hebrew_glyph(uint8_t letter, const GlyphPlacement& placement) {
+    _display->drawChar(
+        placement.draw_x,
+        placement.draw_y,
+        letter,
+        _textcolor,
+        _textbgcolor,
+        _textsize_x,
+        _textsize_y
+    );
+
+    _cursor_x = placement.next_x;
+    _cursor_y = placement.next_y;
+}
+
+bool TextBox::handle_hebrew_char(const char* str, size_t& i) {
+    uint8_t letter = 0;
+    if (!TextHelper::try_get_hebrew_font_char(str, static_cast<uint32_t>(i), letter)) {
+        ++i;
+        return true;
+    }
+
+    draw_rtl_flow_glyph(letter);
+    i += 2;
+    return true;
+}
+
+TextBox::LtrChunk TextBox::measure_ltr_chunk(const char* str,
+                                             size_t start,
+                                             size_t run_pos,
+                                             size_t run_len) const {
+    LtrChunk chunk{0, 0, false};
+
+    while ((run_pos + chunk.fit_len) < run_len) {
+        const uint8_t ch = static_cast<uint8_t>(str[start + run_pos + chunk.fit_len]);
+
+        GlyphMetrics metrics{};
+        if (!get_glyph_metrics(ch, metrics)) {
+            if (!chunk.has_drawable) {
+                ++chunk.fit_len;
+            }
+            break;
+        }
+
+        chunk.has_drawable = true;
+
+        const int16_t next_width = chunk.block_width + metrics.advance;
+        const int16_t block_start_x = _cursor_x - next_width;
+
+        if (block_start_x < _left) {
+            break;
+        }
+
+        chunk.block_width = next_width;
+        ++chunk.fit_len;
+    }
+
+    return chunk;
+}
+
+int16_t TextBox::compute_ltr_chunk_bottom(const char* str,
+                                          size_t start,
+                                          size_t run_pos,
+                                          size_t fit_len,
+                                          int16_t draw_y) const {
+    int16_t max_bottom = draw_y;
+
+    for (size_t j = 0; j < fit_len; ++j) {
+        const uint8_t ch = static_cast<uint8_t>(str[start + run_pos + j]);
+
+        GlyphMetrics metrics{};
+        if (!get_glyph_metrics(ch, metrics)) {
+            continue;
+        }
+
+        const int16_t glyph_bottom = draw_y + metrics.glyph_bottom_offset;
+        if (glyph_bottom > max_bottom) {
+            max_bottom = glyph_bottom;
+        }
+    }
+
+    return max_bottom;
+}
+
+void TextBox::draw_ltr_chunk(const char* str,
+                             size_t start,
+                             size_t run_pos,
+                             size_t fit_len,
+                             int16_t draw_x,
+                             int16_t draw_y) {
+    int16_t pen_x = draw_x;
+
+    for (size_t j = 0; j < fit_len; ++j) {
+        const uint8_t ch = static_cast<uint8_t>(str[start + run_pos + j]);
+
+        GlyphMetrics metrics{};
+        if (!get_glyph_metrics(ch, metrics)) {
+            continue;
+        }
+
+        _display->drawChar(
+            pen_x,
+            draw_y,
+            ch,
+            _textcolor,
+            _textbgcolor,
+            _textsize_x,
+            _textsize_y
+        );
+
+        pen_x += metrics.advance;
+    }
+
+    _cursor_x = draw_x;
+    _cursor_y = draw_y;
+}
+
+bool TextBox::handle_ltr_run(const char* str, size_t& i) {
+    const size_t run_len = TextHelper::count_ltr_run(str, static_cast<uint32_t>(i));
+    if (run_len == 0) {
+        ++i;
+        return true;
+    }
+
+    size_t run_pos = 0;
+
+    while (run_pos < run_len) {
+        const LtrChunk chunk = measure_ltr_chunk(str, i, run_pos, run_len);
+
+        if (chunk.fit_len == 0) {
+            if (!move_to_next_line()) {
+                i += run_pos;
+                return false;
+            }
+            continue;
+        }
+
+        if (!chunk.has_drawable) {
+            run_pos += chunk.fit_len;
+            continue;
+        }
+
+        int16_t draw_y = _cursor_y;
+        int16_t draw_x = _cursor_x - chunk.block_width;
+
+        if (draw_x < _left) {
+            draw_y += line_height();
+            if (draw_y > _bottom) {
+                i += run_pos;
+                return false;
+            }
+
+            draw_x = _right - chunk.block_width;
+        }
+
+        const int16_t max_bottom =
+            compute_ltr_chunk_bottom(str, i, run_pos, chunk.fit_len, draw_y);
+
+        if (max_bottom > _bottom) {
+            i += run_pos;
+            return false;
+        }
+
+        draw_ltr_chunk(str, i, run_pos, chunk.fit_len, draw_x, draw_y);
+        run_pos += chunk.fit_len;
+    }
+
+    i += run_len;
+    return true;
+}
+
+bool TextBox::handle_rtl_neutral_ascii(uint8_t ch, size_t& i) {
+    draw_rtl_flow_glyph(ch);
+    ++i;
+    return true;
+}
+
 size_t TextBox::printHebrew(const char* str) {
     if (str == nullptr || _font == nullptr) {
         return 0;
@@ -114,232 +385,43 @@ size_t TextBox::printHebrew(const char* str) {
     size_t i = 0;
 
     while (str[i] != '\0') {
-        const uint8_t ch = static_cast<uint8_t>(str[i]);
+        const TextCharKind kind = TextHelper::classify(str, static_cast<uint32_t>(i));
 
-        if (ch == '\r') {
-            ++i;
-            continue;
-        }
-
-        if (ch == '\n') {
-            const int16_t next_y = _cursor_y + line_height();
-            if (next_y > _bottom) {
-                break;
-            }
-
-            _cursor_x = line_start_x();
-            _cursor_y = next_y;
-            ++i;
-            continue;
-        }
-
-        // Hebrew UTF-8 character (2 bytes in this project)
-        if (HebrewHelper::isHebrewUtf8Byte(ch)) {
-            const uint8_t letter = HebrewHelper::getHebChar(str, static_cast<uint32_t>(i));
-            if (letter == 0) {
+        switch (kind) {
+            case TextCharKind::CarriageReturn:
                 ++i;
-                continue;
-            }
+                break;
 
-            int16_t advance = 0;
-            int16_t x_offset = 0;
-            int16_t glyph_bottom_offset = 0;
-            if (!get_glyph_metrics(letter, advance, x_offset, glyph_bottom_offset)) {
-                i += 2;
-                continue;
-            }
-
-            int16_t draw_x = (_direction == WritingDirection::RTL)
-                ? (_cursor_x - advance)
-                : _cursor_x;
-            int16_t draw_y = _cursor_y;
-
-
-            const int16_t glyph_left = draw_x + x_offset * static_cast<int16_t>(_textsize_x);
-            const int16_t glyph_right = draw_x + x_offset * static_cast<int16_t>(_textsize_x) + advance;
-
-            bool need_wrap = false;
-            if (_direction == WritingDirection::RTL) {
-                need_wrap = (glyph_left < _left);
-            } else {
-                need_wrap = (glyph_right > _right);
-            }
-
-            if (need_wrap) {
-                draw_y += line_height();
-                if (draw_y > _bottom) {
-                    break;
+            case TextCharKind::Newline:
+                if (!handle_newline()) {
+                    goto done;
                 }
+                ++i;
+                break;
 
-                if (_direction == WritingDirection::RTL) {
-                    draw_x = _right - advance;
-                } else {
-                    draw_x = _left;
+            case TextCharKind::Hebrew:
+                if (!handle_hebrew_char(str, i)) {
+                    goto done;
                 }
-            }
-            
+                break;
 
-            const int16_t glyph_bottom = draw_y + glyph_bottom_offset;
-            if (glyph_bottom > _bottom) {
+            case TextCharKind::RtlNeutral: {
+                const uint8_t ch = static_cast<uint8_t>(str[i]);
+                if (!handle_rtl_neutral_ascii(ch, i)) {
+                    goto done;
+                }
                 break;
             }
 
-            _display->drawChar(
-                draw_x,
-                draw_y,
-                letter,
-                _textcolor,
-                _textbgcolor,
-                _textsize_x,
-                _textsize_y
-            );
-
-            if (_direction == WritingDirection::RTL) {
-                _cursor_x = draw_x;
-            } else {
-                _cursor_x = draw_x + advance;
-            }
-            _cursor_y = draw_y;
-
-            i += 2;
-            continue;
+            case TextCharKind::LtrRun:
+                if (!handle_ltr_run(str, i)) {
+                    goto done;
+                }
+                break;
         }
-
-        // Non-Hebrew run:
-        // Draw it as a left-to-right block while consuming original bytes forward,
-        // so returned offset stays correct for paging/resume.
-        const size_t run_len = HebrewHelper::countEnglishRtl(str, static_cast<uint32_t>(i));
-        if (run_len == 0) {
-            ++i;
-            continue;
-        }
-
-        size_t run_pos = 0;
-        while (run_pos < run_len) {
-            int16_t block_width = 0;
-            size_t fit_len = 0;
-            bool found_drawable = false;
-
-            // Try to fit as much of the current run as possible on this line.
-            while ((run_pos + fit_len) < run_len) {
-                const uint8_t run_ch = static_cast<uint8_t>(str[i + run_pos + fit_len]);
-
-                int16_t advance = 0;
-                int16_t x_offset = 0;
-                int16_t glyph_bottom_offset = 0;
-
-                if (!get_glyph_metrics(run_ch, advance, x_offset, glyph_bottom_offset)) {
-                    // Stop the current chunk before unsupported character.
-                    if (!found_drawable) {
-                        // Consume unsupported character without drawing.
-                        ++fit_len;
-                    }
-                    break;
-                }
-
-                found_drawable = true;
-
-                const int16_t next_width = block_width + advance;
-                const int16_t block_start_x = _cursor_x - next_width;
-
-                if (block_start_x < _left) {
-                    break;
-                }
-
-                block_width = next_width;
-                ++fit_len;
-            }
-
-            if (fit_len == 0) {
-                const int16_t next_y = _cursor_y + line_height();
-                if (next_y > _bottom) {
-                    _display->setFont(old_font);
-                    return i + run_pos;
-                }
-
-                _cursor_x = _right;
-                _cursor_y = next_y;
-                continue;
-            }
-
-            // If we only consumed unsupported bytes, just move forward.
-            if (!found_drawable) {
-                run_pos += fit_len;
-                continue;
-            }
-
-            int16_t draw_y = _cursor_y;
-            int16_t block_start_x = _cursor_x - block_width;
-
-            if (block_start_x < _left) {
-                draw_y += line_height();
-                if (draw_y > _bottom) {
-                    _display->setFont(old_font);
-                    return i + run_pos;
-                }
-                block_start_x = _right - block_width;
-            }
-
-            // Check bottom using actual glyph bottoms.
-            int16_t max_bottom = draw_y;
-            int16_t pen_x = block_start_x;
-
-            for (size_t j = 0; j < fit_len; ++j) {
-                const uint8_t run_ch = static_cast<uint8_t>(str[i + run_pos + j]);
-
-                int16_t advance = 0;
-                int16_t x_offset = 0;
-                int16_t glyph_bottom_offset = 0;
-                if (!get_glyph_metrics(run_ch, advance, x_offset, glyph_bottom_offset)) {
-                    continue;
-                }
-
-                const int16_t glyph_bottom = draw_y + glyph_bottom_offset;
-                if (glyph_bottom > max_bottom) {
-                    max_bottom = glyph_bottom;
-                }
-
-                pen_x += advance;
-            }
-
-            if (max_bottom > _bottom) {
-                _display->setFont(old_font);
-                return i + run_pos;
-            }
-
-            // Draw the block left-to-right in original byte order.
-            pen_x = block_start_x;
-            for (size_t j = 0; j < fit_len; ++j) {
-                const uint8_t run_ch = static_cast<uint8_t>(str[i + run_pos + j]);
-
-                int16_t advance = 0;
-                int16_t x_offset = 0;
-                int16_t glyph_bottom_offset = 0;
-                if (!get_glyph_metrics(run_ch, advance, x_offset, glyph_bottom_offset)) {
-                    continue;
-                }
-
-                _display->drawChar(
-                    pen_x,
-                    draw_y,
-                    run_ch,
-                    _textcolor,
-                    _textbgcolor,
-                    _textsize_x,
-                    _textsize_y
-                );
-
-                pen_x += advance;
-            }
-
-            _cursor_x = block_start_x;
-            _cursor_y = draw_y;
-            run_pos += fit_len;
-        }
-
-        i += run_len;
     }
 
+done:
     _display->setFont(old_font);
     return i;
 }
