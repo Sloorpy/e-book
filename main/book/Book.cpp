@@ -50,8 +50,6 @@ void Book::no_more_pages()
 
 void Book::read_page()
 {
-    TextBox text_box = make_text_box(0, 2, PAGE_WIDTH, PAGE_HEIGHT);
-
     if (_current_chapter.pages_offset >= _current_chapter.pages.length()) {
         const uint16_t next_chapter = _current_chapter.num + 1;
         if (next_chapter <= _page_manager.chapter_count()) {
@@ -60,7 +58,10 @@ void Book::read_page()
         }
         return;
     }
-
+    
+    TextBox text_box = make_text_box(0, 28, PAGE_WIDTH, PAGE_HEIGHT);
+    text_box.setTextSize(2);
+    _display->drawLine(0, 20, PAGE_WIDTH, 20, 0);
     const std::string curr_text = _current_chapter.pages.substr(_current_chapter.pages_offset);
     const size_t bytes_written = text_box.printHebrew(curr_text.c_str());
     _current_chapter.pages_offset += bytes_written;
