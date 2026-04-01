@@ -29,7 +29,6 @@ public:
     void setWrap(bool wrap);
 
 public:
-    // Returns how many BYTES from the original UTF-8 string were consumed.
     size_t printHebrew(const char* str);
 
 public:
@@ -52,11 +51,10 @@ private:
     int16_t _bottom;
     int16_t _cursor_x;
     int16_t _cursor_y;
-    WritingDirection _direction;
-    const GFXfont* _font;
     uint8_t _textsize_x;
     uint8_t _textsize_y;
     uint8_t _textcolor;
     uint8_t _textbgcolor;
-    bool _wrap;
+    WritingDirection _direction;
+    const GFXfont* _font;
 };

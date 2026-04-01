@@ -1,7 +1,7 @@
 #include "TextBox.hpp"
 #include "Display.hpp"
+#include <Fonts/hebEng5x7avia.h>
 #include <cstdint>
-
 TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t left,
                  int16_t top,
@@ -15,13 +15,12 @@ TextBox::TextBox(std::shared_ptr<Display> display,
     , _bottom(bottom)
     , _cursor_x(0)
     , _cursor_y(0)
-    , _direction(dir)
-    , _font(nullptr)
     , _textsize_x(1)
     , _textsize_y(1)
     , _textcolor(0)
     , _textbgcolor(0)
-    , _wrap(true)
+    , _direction(dir)
+    , _font(&hebEng5x7avia)
 {
     resetCursor();
 }
@@ -60,9 +59,6 @@ void TextBox::setTextColor(uint8_t color, uint8_t bg) {
     _textbgcolor = bg;
 }
 
-void TextBox::setWrap(bool wrap) {
-    _wrap = wrap;
-}
 
 int16_t TextBox::line_height() const {
     if (_font == nullptr) {
@@ -158,30 +154,30 @@ size_t TextBox::printHebrew(const char* str) {
                 : _cursor_x;
             int16_t draw_y = _cursor_y;
 
-            if (_wrap) {
-                const int16_t glyph_left = draw_x + x_offset * static_cast<int16_t>(_textsize_x);
-                const int16_t glyph_right = draw_x + x_offset * static_cast<int16_t>(_textsize_x) + advance;
 
-                bool need_wrap = false;
-                if (_direction == WritingDirection::RTL) {
-                    need_wrap = (glyph_left < _left);
-                } else {
-                    need_wrap = (glyph_right > _right);
+            const int16_t glyph_left = draw_x + x_offset * static_cast<int16_t>(_textsize_x);
+            const int16_t glyph_right = draw_x + x_offset * static_cast<int16_t>(_textsize_x) + advance;
+
+            bool need_wrap = false;
+            if (_direction == WritingDirection::RTL) {
+                need_wrap = (glyph_left < _left);
+            } else {
+                need_wrap = (glyph_right > _right);
+            }
+
+            if (need_wrap) {
+                draw_y += line_height();
+                if (draw_y > _bottom) {
+                    break;
                 }
 
-                if (need_wrap) {
-                    draw_y += line_height();
-                    if (draw_y > _bottom) {
-                        break;
-                    }
-
-                    if (_direction == WritingDirection::RTL) {
-                        draw_x = _right - advance;
-                    } else {
-                        draw_x = _left;
-                    }
+                if (_direction == WritingDirection::RTL) {
+                    draw_x = _right - advance;
+                } else {
+                    draw_x = _left;
                 }
             }
+            
 
             const int16_t glyph_bottom = draw_y + glyph_bottom_offset;
             if (glyph_bottom > _bottom) {
@@ -246,7 +242,7 @@ size_t TextBox::printHebrew(const char* str) {
                 const int16_t next_width = block_width + advance;
                 const int16_t block_start_x = _cursor_x - next_width;
 
-                if (_wrap && block_start_x < _left) {
+                if (block_start_x < _left) {
                     break;
                 }
 
@@ -275,7 +271,7 @@ size_t TextBox::printHebrew(const char* str) {
             int16_t draw_y = _cursor_y;
             int16_t block_start_x = _cursor_x - block_width;
 
-            if (_wrap && block_start_x < _left) {
+            if (block_start_x < _left) {
                 draw_y += line_height();
                 if (draw_y > _bottom) {
                     _display->setFont(old_font);

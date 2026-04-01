@@ -2,7 +2,9 @@
 #include "File.hpp"
 #include "PageManager.hpp"
 #include "TextBox.hpp"
+#include "Display.hpp"
 
+#include <memory>
 #include <string_view>
 #include <cstdint>
 
@@ -16,8 +18,8 @@ public:
     void prev_page();
 
 public:
-    void display_title() const;
-    void no_more_pages() const;
+    void display_title();
+    void no_more_pages();
     
 public:
     bool has_next_page() const;
@@ -30,19 +32,16 @@ private:
     void draw_cover(const uint16_t x, const uint16_t y);
     
 private:
-    static std::unique_ptr<TextBox> create_text_box(std::shared_ptr<Display> display);
+    TextBox make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom);
 
 private:
     PageManager _page_manager;
-    std::unique_ptr<TextBox> _text_box;
-
-private:
     Chapter _current_chapter;
 
-public:
-    static constexpr uint16_t PAGE_WIDTH = 300;
-    static constexpr uint16_t PAGE_HEIGHT = 400;
+private:
+    std::shared_ptr<Display> _display;
 
 private:
-    static constexpr uint32_t CHAPTER_BUFFER_SIZE = 2;
+    static constexpr uint16_t PAGE_WIDTH = 300;
+    static constexpr uint16_t PAGE_HEIGHT = 400;
 };
