@@ -4,9 +4,8 @@
 static constexpr char TAG[] = "PageManager";
 
 
-PageManager::PageManager(const std::string_view &book_name, std::shared_ptr<SDManager> sd) :
+PageManager::PageManager(const std::string_view &book_name) :
     _book_name(book_name),
-    _sd(sd),
     _chapters_count(0)
 {
     _chapters_count = chapter_count();
@@ -14,12 +13,12 @@ PageManager::PageManager(const std::string_view &book_name, std::shared_ptr<SDMa
 
 std::string PageManager::get_cover() const
 {
-    return File(_sd, book_file_path("cover")).read_all();
+    return File(book_file_path("cover")).read_all();
 }
 
 std::string PageManager::get_chapter_title(const uint16_t chapter_num) const
 {
-    return File(_sd, chapter_file_path(chapter_num, "chapter")).read_all();
+    return File(chapter_file_path(chapter_num, "chapter")).read_all();
 }
 
 uint16_t PageManager::chapter_count() const
@@ -29,7 +28,7 @@ uint16_t PageManager::chapter_count() const
     }
 
     const std::string chapter_count_path = book_file_path("chapter_count");
-    const std::string chapter_count = File(_sd, chapter_count_path).read_all();
+    const std::string chapter_count = File(chapter_count_path).read_all();
 
     int num = 0;
     try {
@@ -93,9 +92,9 @@ Chapter PageManager::load_chapter(const uint16_t chapter_num)
 
     static constexpr size_t START_OFFSET = 0;
     return Chapter{
-        File(_sd, pages_path).read_all(),
-        File(_sd, chapter_path).read_all(),
+        File(pages_path).read_all(),
+        File(chapter_path).read_all(),
         START_OFFSET,
         chapter_num
-    };;
+    };
 }

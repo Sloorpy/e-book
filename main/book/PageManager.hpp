@@ -16,7 +16,7 @@ struct Chapter final {
 
 class PageManager final {
 public:
-    explicit PageManager(const std::string_view& book_name, std::shared_ptr<SDManager> sd);
+    explicit PageManager(const std::string_view& book_name);
 
 public:
     std::string get_cover() const;
@@ -33,6 +33,5 @@ private:
 
 private:
     const std::string_view _book_name;
-    std::shared_ptr<SDManager> _sd;
     uint16_t _chapters_count;
 };

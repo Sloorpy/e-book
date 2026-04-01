@@ -3,8 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-File::File(std::shared_ptr<SDManager> sd_reader, const std::string_view& filename) :  
-    _sd(sd_reader),
+File::File(const std::string_view& filename) :  
     _fd(open_file(filename)) 
 {}
 
@@ -86,7 +85,7 @@ void File::seek(size_t position) {
 
 FILE *File::open_file(const std::string_view &filename)
 {
-    const std::string file_path = std::string(_sd->get_base_path()) + "/" + std::string(filename);
+    const std::string file_path = std::string(SDManager::instance().get_base_path()) + "/" + std::string(filename);
     FILE* fd = fopen(file_path.c_str(), "rb");
     
     if (!fd) 

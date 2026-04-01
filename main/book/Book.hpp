@@ -8,7 +8,7 @@
 
 class Book final {
 public:
-    explicit Book(std::shared_ptr<Display> display, const std::string_view& book_name, std::shared_ptr<SDManager> sd_reader);
+    explicit Book(std::shared_ptr<Display> display, const std::string_view& book_name);
     ~Book() = default;
 
 public:
@@ -24,9 +24,10 @@ public:
     bool has_prev_page() const;
 
 private:
-    void display_chapter_title() const;
+    void display_chapter_title();
     std::string get_title() const;
     std::string get_author() const;
+    void draw_cover(const uint16_t x, const uint16_t y);
     
 private:
     static std::unique_ptr<TextBox> create_text_box(std::shared_ptr<Display> display);

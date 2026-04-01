@@ -4,8 +4,8 @@
 class BookState final : public ProgramState
 {
 public:
-    explicit BookState(const std::string_view& book_name, std::shared_ptr<SDManager> sd, std::unique_ptr<ProgramState> prev_state);
-    explicit BookState(const std::string_view& book_name, std::shared_ptr<SDManager> sd, std::unique_ptr<Display> display);
+    explicit BookState(const std::string_view& book_name, std::unique_ptr<ProgramState> prev_state);
+    explicit BookState(const std::string_view& book_name, std::unique_ptr<Display> display);
     ~BookState() override = default;
 
 public:
@@ -15,10 +15,9 @@ public:
     virtual void on_hold() override;   
     
 private:
-    std::unique_ptr<Book> create_book(const std::string_view& book_name, std::shared_ptr<SDManager> sd);
+    std::unique_ptr<Book> create_book(const std::string_view& book_name);
 
 private:
     std::unique_ptr<Book> _book;
-    std::shared_ptr<SDManager> _sd;
 };
 

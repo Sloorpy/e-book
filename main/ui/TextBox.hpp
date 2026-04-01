@@ -32,6 +32,9 @@ public:
     // Returns how many BYTES from the original UTF-8 string were consumed.
     size_t printHebrew(const char* str);
 
+public:
+    std::shared_ptr<Display> display() { return _display; }
+
 private:
     int16_t line_height() const;
     int16_t line_start_x() const;

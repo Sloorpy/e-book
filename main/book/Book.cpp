@@ -11,8 +11,8 @@ static constexpr uint16_t MIDDLE_Y = 75;
 static constexpr uint16_t BOTTOM_X = 300;
 static constexpr uint16_t BOTTOM_Y = 375;
 
-Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name, std::shared_ptr<SDManager> sd_reader) : 
-    _page_manager(book_name, std::move(sd_reader)), 
+Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
+    _page_manager(book_name), 
     _text_box(create_text_box(display)),
     _current_chapter{"", "", 0, 0}
 {}
@@ -64,7 +64,7 @@ void Book::prev_page()
 
 }
 
-void Book::display_chapter_title() const
+void Book::display_chapter_title()
 { 
     _text_box->setTextColor(static_cast<uint8_t>(Color::BLACK));
     _text_box->setFont(&hebEng5x7avia);
@@ -103,6 +103,18 @@ std::string Book::get_author() const
     }
 
     return cover.substr(index + 1);
+}
+
+void Book::draw_cover(const uint16_t center_x, const uint16_t center_y)
+{
+    static constexpr uint16_t BITMAP_WIDTH = 160;
+    static constexpr uint16_t BITMAP_HEIGHT = 210;
+    static constexpr uint16_t BITMAP_Y = 150;
+    static uint16_t BITMAP_X = (center_x - static_cast<int16_t>(BITMAP_WIDTH)) / 2;
+    
+    std::vector<uint8_t> bitmap = File("books/percy_2_heb/cover.bin").read_all_bytes();
+    _text_box->display()->drawRect(BITMAP_X, BITMAP_Y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
+    _text_box->display()->drawBitmap(BITMAP_X, BITMAP_Y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
 }
 
 bool Book::has_next_page() const

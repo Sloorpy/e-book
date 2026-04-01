@@ -17,7 +17,6 @@ static constexpr std::string_view MAIN_TAG = "Main";
 static constexpr std::string_view BOOK_NAME = "percy_2_heb";
 
 std::shared_ptr<SPI> g_spi = nullptr;
-std::shared_ptr<SDManager> g_sd = nullptr;
 
 extern "C" void app_main(void)
 {   
@@ -27,10 +26,10 @@ extern "C" void app_main(void)
     try 
     {
         g_spi = std::make_shared<SPI>();
-        g_sd = std::make_shared<SDManager>(g_spi);
+        SDManager::init(g_spi);
 
         std::unique_ptr<ProgramState> current_state = nullptr;
-        current_state = std::make_unique<BookState>(BOOK_NAME, g_sd, std::make_unique<Display>(g_spi));
+        current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(g_spi));
         current_state->main();
         
         Button button(GPIO_NUM_32);

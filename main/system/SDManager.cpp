@@ -1,6 +1,26 @@
 #include "SDManager.hpp"
 #include <esp_log.h>
 
+SDManager* SDManager::_instance = nullptr;
+
+SDManager& SDManager::instance()
+{
+    if (!_instance)
+    {
+        throw std::runtime_error("SDManager not initialized. Call SDManager::init() first.");
+    }
+    return *_instance;
+}
+
+void SDManager::init(std::shared_ptr<SPI> spi, const std::string_view& base_path)
+{
+    if (_instance)
+    {
+        throw std::runtime_error("SDManager already initialized");
+    }
+    _instance = new SDManager(spi, base_path);
+}
+
 SDManager::SDManager(std::shared_ptr<SPI> spi, const std::string_view& base_path) :
     _spi(spi),
     _card(mount_sd_card(spi, base_path)),

@@ -1,12 +1,11 @@
 #pragma once
 #include "SDManager.hpp"
-#include <memory>
 #include <vector>
 
 class File final
 {
 public:
-    explicit File(std::shared_ptr<SDManager> sd_reader, const std::string_view& filename);
+    explicit File(const std::string_view& filename);
     ~File();
 
 public:
@@ -20,7 +19,6 @@ private:
     FILE* open_file(const std::string_view& filename);
 
 private:    
-    std::shared_ptr<SDManager> _sd;
     FILE* _fd;
 
 private:
