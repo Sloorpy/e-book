@@ -44,4 +44,6 @@ private:
 private:
     static constexpr uint16_t PAGE_WIDTH = 300;
     static constexpr uint16_t PAGE_HEIGHT = 400;
+    static constexpr uint16_t BITMAP_WIDTH = 160;
+    static constexpr uint16_t BITMAP_HEIGHT = 210;
 };

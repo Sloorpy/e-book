@@ -32,6 +32,10 @@ void Book::display_title()
     text_box.setTextSize(2);
     text_box.setCursor(300, 380);
     text_box.printHebrew(get_author().c_str());
+
+    static constexpr uint16_t bmp_y = 150;
+    static uint16_t bmp_x = (PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2;
+    draw_cover(bmp_x,bmp_y);
 }
 
 void Book::no_more_pages()
@@ -111,16 +115,11 @@ std::string Book::get_author() const
     return cover.substr(index + 1);
 }
 
-void Book::draw_cover(const uint16_t center_x, const uint16_t center_y)
+void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
 {
-    static constexpr uint16_t BITMAP_WIDTH = 160;
-    static constexpr uint16_t BITMAP_HEIGHT = 210;
-    static constexpr uint16_t BITMAP_Y = 150;
-    static uint16_t BITMAP_X = (center_x - static_cast<int16_t>(BITMAP_WIDTH)) / 2;
-    
     std::vector<uint8_t> bitmap = File("books/percy_2_heb/cover.bin").read_all_bytes();
-    _display->drawRect(BITMAP_X, BITMAP_Y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
-    _display->drawBitmap(BITMAP_X, BITMAP_Y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
+    _display->drawRect(start_x, start_y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
+    _display->drawBitmap(start_x, start_y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
 }
 
 bool Book::has_next_page() const
