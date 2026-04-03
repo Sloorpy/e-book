@@ -6,9 +6,11 @@ idf_component_register(SRCS
     "system/SPI.cpp"
     "book/Book.cpp"
     "book/PageManager.cpp"
-    "ui/TextHelper.cpp"
+    "ui/Text/BookString.cpp"
+    "ui/Text/TextHelper.cpp"
+    "ui/Text/Word.cpp"
+    "ui/Text/TextBox.cpp"
     "ui/Display.cpp"
-    "ui/TextBox.cpp"
     "states/ProgramState.cpp"
     "states/BookState.cpp"
     

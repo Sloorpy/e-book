@@ -7,6 +7,11 @@
 #include <driver/gpio.h>
 #include <memory>
 
+struct Vector2 {
+    int16_t x;
+    int16_t y;
+};
+
 enum class Color : uint8_t 
 {
     BLACK = 0,

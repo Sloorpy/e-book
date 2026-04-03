@@ -1,6 +1,8 @@
 #include "BookState.hpp"
-#include "TextBox.hpp"
+#include "Text/TextBox.hpp"
 #include "Fonts/hebEng5x7avia.h"
+
+#include <esp_timer.h>
 
 BookState::BookState(const std::string_view& book_name, std::unique_ptr<ProgramState> prev_state) :
     ProgramState(prev_state->get_display()),
@@ -41,6 +43,8 @@ void BookState::on_double_click()
 
 void BookState::on_hold()
 {
+    _book->reset_book();
+    main();
 }
 
 std::unique_ptr<Book> BookState::create_book(const std::string_view &book_name)

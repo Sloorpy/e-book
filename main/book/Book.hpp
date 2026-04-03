@@ -1,12 +1,13 @@
 #pragma once
 #include "File.hpp"
 #include "PageManager.hpp"
-#include "TextBox.hpp"
+#include "Text/TextBox.hpp"
 #include "Display.hpp"
 
 #include <memory>
 #include <string_view>
 #include <cstdint>
+#include <stack>
 
 class Book final {
 public:
@@ -20,6 +21,7 @@ public:
 public:
     void display_title();
     void no_more_pages();
+    void reset_book();
     
 public:
     bool has_next_page() const;
@@ -37,7 +39,8 @@ private:
 private:
     PageManager _page_manager;
     Chapter _current_chapter;
-
+    std::stack<size_t> _page_indexs;
+    
 private:
     std::shared_ptr<Display> _display;
 
