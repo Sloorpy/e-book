@@ -32,6 +32,7 @@ private:
     std::string get_title() const;
     std::string get_author() const;
     void draw_cover(const uint16_t x, const uint16_t y);
+    const GFXfont* get_font() const;
     
 private:
     TextBox make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom);

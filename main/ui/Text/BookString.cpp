@@ -1,69 +1,82 @@
 #include "BookString.hpp"
 #include "TextBox.hpp"
 #include "TextHelper.hpp"
+#include <vector>
+#include <cstring>
 
-BookString::BookString(const std::string& str)
-    : _str(str) {}
+BookString::BookString(const std::vector<uint8_t>& data)
+    : _str(data), _pos(0) {}
+
+BookString::BookString(const char* str)
+    : _str(reinterpret_cast<const uint8_t*>(str), reinterpret_cast<const uint8_t*>(str) + strlen(str)), _pos(0) {}
+
+bool BookString::is_char_at(size_t pos, char c) const {
+    return pos < _str.size() && static_cast<char>(_str[pos]) == c;
+}
+
+size_t BookString::find_delimiter(size_t start) const {
+    for (size_t i = start; i < _str.size(); ++i) {
+        char c = static_cast<char>(_str[i]);
+        if (c == ' ' || c == '\n' || c == '\r') {
+            return i;
+        }
+    }
+    return _str.size();
+}
 
 void BookString::skip_spaces() {
-    while (!_str.empty() && _str[0] == ' ') {
-        _str = _str.substr(1);
+    while (_pos < _str.size() && static_cast<char>(_str[_pos]) == ' ') {
+        ++_pos;
     }
 }
 
 void BookString::skip_newline() {
-    if (_str.empty()) {
+    if (_pos >= _str.size()) {
         return;
     }
 
-    if (_str[0] == '\r' && _str.length() > 1 && _str[1] == '\n') {
-        _str = _str.substr(2);
+    if (is_char_at(_pos, '\r') && is_char_at(_pos + 1, '\n')) {
+        _pos += 2;
     } else {
-        _str = _str.substr(1);
+        ++_pos;
     }
 }
 
 size_t BookString::next_hebrew_word_size() const {
-    if (_str.empty()) {
+    if (_pos >= _str.size()) {
         return 0;
     }
-    size_t word_end = _str.find_first_of(" \n\r");
-    if (word_end == std::string::npos) {
-        word_end = _str.size();
-    }
-    std::string word_str = _str.substr(0, word_end);
-    return TextHelper::count_hebrew_chars(word_str);
+    size_t word_end = find_delimiter(_pos);
+    return TextHelper::count_hebrew_chars(std::vector<uint8_t>(_str.begin() + _pos, _str.begin() + word_end));
 }
 
 bool BookString::is_end() const
 {
-    return _str.empty() || _str[0] == '\n' || _str[0] == '\r';
+    return _pos >= _str.size() || 
+           is_char_at(_pos, '\n') || 
+           is_char_at(_pos, '\r');
 }
 
 bool BookString::is_space() const
 {
-    return !_str.empty() && _str[0] == ' ';
+    return _pos < _str.size() && static_cast<char>(_str[_pos]) == ' ';
 }
 
 Word BookString::get_word() {
     skip_spaces();
 
-    if (_str.empty() || _str[0] == '\n' || _str[0] == '\r') {
-        return {""};
+    if (_pos >= _str.size() || is_char_at(_pos, '\n') || is_char_at(_pos, '\r')) {
+        return {};
     }
 
-    size_t word_end = _str.find_first_of(" \n\r");
-    if (word_end == std::string::npos) {
-        word_end = _str.size();
-    }
-    std::string word_str = _str.substr(0, word_end);
-    return {word_str};
+    size_t word_end = find_delimiter(_pos);
+    return Word{std::vector<uint8_t>(_str.begin() + _pos, _str.begin() + word_end)};
 }
 
 void BookString::skip_word() {
     Word word = get_word();
-    if (!word.text.empty()) {
-        _str = _str.substr(word.text.size());
+    if (!word.bytes.empty()) {
+        _pos += word.bytes.size();
     }
     skip_spaces();
 }
@@ -77,11 +90,11 @@ Word BookString::next_word() {
 Line BookString::next_line(const TextBox& tb) {
     skip_spaces();
 
-    if (_str.empty()) {
+    if (_pos >= _str.size()) {
         return {};
     }
 
-    if (_str[0] == '\n' || _str[0] == '\r') {
+    if (is_char_at(_pos, '\n') || is_char_at(_pos, '\r')) {
         skip_newline();
         return {};
     }
@@ -91,7 +104,7 @@ Line BookString::next_line(const TextBox& tb) {
 
     while (!is_end()) {
         Word peek_word = get_word();
-        if (peek_word.text.empty()) {
+        if (peek_word.bytes.empty()) {
             break;
         }
 
@@ -119,9 +132,9 @@ Line BookString::next_line(const TextBox& tb) {
 }
 
 bool BookString::end() const {
-    return _str.empty();
+    return _pos >= _str.size();
 }
 
 size_t BookString::remaining_bytes() const {
-    return _str.size();
+    return _str.size() - _pos;
 }

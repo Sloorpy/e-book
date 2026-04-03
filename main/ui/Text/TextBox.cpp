@@ -82,14 +82,16 @@ int16_t TextBox::space_width() const {
            static_cast<int16_t>(_font->glyph[' ' - _font->first].xAdvance);
 }
 
-size_t TextBox::print_hebrew(const char* str) {
-    if (str == nullptr || _font == nullptr) {
+size_t TextBox::print_hebrew(const std::vector<uint8_t>& str) {
+    if (_font == nullptr) {
         return 0;
     }
 
+    const GFXfont* old_font = _display->getFont();
     _display->setFont(_font);
+
     BookString bs(str);
-    const size_t original_len = strlen(str);
+    const size_t original_len = str.size();
 
     while (!bs.end()) {
         const Line line = bs.next_line(*this);
@@ -109,16 +111,15 @@ size_t TextBox::print_hebrew(const char* str) {
         }
     }
 
+    _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
 }
 
 void TextBox::write_word(const Word& word)
 {
-    const std::vector<uint8_t> font_indices = word.to_font_indices();
-
     int16_t pen_x = _cursor.x;
 
-    for (uint8_t ch : font_indices) {
+    for (uint8_t ch : word.bytes) {
         const GFXglyph* const glyph = TextHelper::get_char_font(ch, _font);
         if (glyph == nullptr) {
             continue;
@@ -155,12 +156,12 @@ void TextBox::next_line()
     _cursor.x = line_start_x();
 }
 
-size_t TextBox::next_print_size(const char *str)
+size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
 {
-    if (str == nullptr || _font == nullptr) {
+    if (_font == nullptr) {
         return 0;
     }
-    const size_t original_len = strlen(str);
+    const size_t original_len = str.size();
     const Vector2 original_cursor = _cursor;
 
     BookString bs(str);

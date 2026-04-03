@@ -1,6 +1,8 @@
 #include "PageManager.hpp"
+#include "Text/TextHelper.hpp"
 #include <esp_log.h>
 #include <string>
+
 static constexpr char TAG[] = "PageManager";
 
 
@@ -80,19 +82,19 @@ std::string PageManager::chapter_file_path(uint16_t chapter_num, const std::stri
     return path;
 }
 
-Chapter PageManager::load_chapter(const uint16_t chapter_num)
+Chapter PageManager::load_chapter(const uint16_t chapter_num, const GFXfont* font)
 {
     if (chapter_num > chapter_count())
     {
         throw std::runtime_error("Error: Tried to get invalid chapter");
     }
 
-    const std::string pages_path = chapter_file_path(chapter_num, "pages");
     const std::string chapter_path = chapter_file_path(chapter_num, "chapter");
+    const std::string pages_path = chapter_file_path(chapter_num, "pages");
 
     static constexpr size_t START_OFFSET = 0;
     return Chapter{
-        File(pages_path).read_all(),
+        TextHelper::serialize_to_font_indices(File(pages_path).read_all_bytes(), font),
         File(chapter_path).read_all(),
         START_OFFSET,
         chapter_num

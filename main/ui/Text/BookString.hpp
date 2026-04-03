@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <vector>
 #include "Word.hpp"
 
@@ -8,7 +7,8 @@ class TextBox;
 
 class BookString final {
 public:
-    explicit BookString(const std::string& str);
+    explicit BookString(const std::vector<uint8_t>& data);
+    explicit BookString(const char* str);
 
     Word get_word();
     void skip_word();
@@ -23,7 +23,10 @@ private:
     size_t next_hebrew_word_size() const;
     bool is_end() const;
     bool is_space() const;
+    bool is_char_at(size_t pos, char c) const;
+    size_t find_delimiter(size_t start) const;
 
 private:
-    std::string _str;
+    std::vector<uint8_t> _str;
+    size_t _pos;
 };

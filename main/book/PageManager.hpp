@@ -1,14 +1,16 @@
 #pragma once
 
 #include "File.hpp"
+#include "Text/TextHelper.hpp"
 
 #include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
+#include <gfxfont.h>
 
 struct Chapter final {
-    std::string pages;
+    std::vector<uint8_t> pages;
     std::string chapter_title;
     size_t pages_offset;
     uint16_t num;
@@ -22,7 +24,7 @@ public:
     std::string get_cover() const;
     std::string get_chapter_title(const uint16_t chapter_num) const;
 
-    Chapter load_chapter(const uint16_t chapter_num);
+    Chapter load_chapter(const uint16_t chapter_num, const GFXfont* font);
     uint16_t chapter_count() const;
 
 private:

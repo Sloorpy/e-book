@@ -28,8 +28,8 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t print_hebrew(const char* str);
-    size_t next_print_size(const char* str);
+    size_t print_hebrew(const std::vector<uint8_t>& str);
+    size_t next_print_size(const std::vector<uint8_t>& str);
     void write_word(const Word& word);
     void write_line(const Line& line);
     void next_line();

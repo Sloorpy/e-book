@@ -5,6 +5,7 @@
 #include "Display.hpp"
 #include <esp_log.h>
 #include <esp_timer.h>
+#include <cstring>
 
 static constexpr char TAG[] = "Book";
 
@@ -12,7 +13,7 @@ static constexpr uint16_t MIDDLE_X = 270;
 static constexpr uint16_t MIDDLE_Y = 75;
 static constexpr uint16_t BOTTOM_X = 300;
 static constexpr uint16_t BOTTOM_Y = 375;
-static const Chapter BASE_CHAPTER{"", "", 0, 0};
+static const Chapter BASE_CHAPTER{{}, "", 0, 0};
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
     _page_manager(book_name),
@@ -28,14 +29,15 @@ void Book::display_title()
     
     text_box.setTextColor(static_cast<uint8_t>(Color::BLACK));
     text_box.setFont(&hebEng5x7avia);
-
+    const std::string title = get_title();
+    const std::string author = get_author();
     text_box.setTextSize(5);
     text_box.setCursor(290, 40);
-    text_box.print_hebrew(get_title().c_str());
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(title, &hebEng5x7avia));
 
     text_box.setTextSize(2);
     text_box.setCursor(300, 380);
-    text_box.print_hebrew(get_author().c_str());
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(author, &hebEng5x7avia));
 
     static constexpr uint16_t bmp_y = 150;
     static uint16_t bmp_x = (PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2;
@@ -49,20 +51,24 @@ void Book::no_more_pages()
     text_box.setFont(&hebEng5x7avia);
     text_box.setTextSize(3);
     text_box.setTextColor(static_cast<uint8_t>(Color::BLACK));
-    text_box.print_hebrew("נגמרו העמודים :)");
+    const char* msg = "נגמרו העמודים :)";
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(
+        std::vector<uint8_t>(msg, msg + strlen(msg)), 
+        &hebEng5x7avia
+    ));
 }
 
 void Book::reset_book()
 {
-    _current_chapter = Chapter{"", "", 0, 0};
+    _current_chapter = Chapter{{}, "", 0, 0};
 }
 
 void Book::read_page()
 {
-    if (_current_chapter.pages_offset >= _current_chapter.pages.length()) {
+    if (_current_chapter.pages_offset >= _current_chapter.pages.size()) {
         const uint16_t next_chapter = _current_chapter.num + 1;
         if (next_chapter <= _page_manager.chapter_count()) {
-            _current_chapter = _page_manager.load_chapter(next_chapter);
+            _current_chapter = _page_manager.load_chapter(next_chapter, get_font());
             display_chapter_title();
         }
         return;
@@ -72,9 +78,9 @@ void Book::read_page()
     text_box.setTextSize(2);
     _display->drawLine(0, 20, PAGE_WIDTH, 20, 0);
     
-    const std::string curr_text = _current_chapter.pages.substr(_current_chapter.pages_offset);
-    const size_t next_size = text_box.next_print_size(curr_text.c_str());
-    const size_t bytes_written = text_box.print_hebrew(curr_text.c_str());
+    const std::vector<uint8_t> curr_text(_current_chapter.pages.begin() + _current_chapter.pages_offset, _current_chapter.pages.end());
+    //const size_t next_size = text_box.next_print_size(curr_text);
+    const size_t bytes_written = text_box.print_hebrew(curr_text);
     _page_indexs.push(_current_chapter.pages_offset);
     _current_chapter.pages_offset += bytes_written;
 }
@@ -90,18 +96,10 @@ void Book::prev_page()
             return;
         }
 
-        _current_chapter = _page_manager.load_chapter(prev_chapter);
+        _current_chapter = _page_manager.load_chapter(prev_chapter, get_font());
         display_chapter_title();
         return;
     }
-
-    // TextBox text_box = make_text_box(0, 28, PAGE_WIDTH, PAGE_HEIGHT);
-    // text_box.setTextSize(2);
-    // _display->drawLine(0, 20, PAGE_WIDTH, 20, 0);
-    // const std::string curr_text = _current_chapter.pages.substr(_current_chapter.pages_offset);
-    // const size_t bytes_written = text_box.print_hebrew(curr_text.c_str());
-    // _page_indexs.push(_current_chapter.pages_offset);
-    // _current_chapter.pages_offset += bytes_written;
 }
 
 void Book::display_chapter_title()
@@ -113,11 +111,19 @@ void Book::display_chapter_title()
 
     text_box.setTextSize(8);
     text_box.setCursor(180, 80);
-    text_box.print_hebrew(std::to_string(_current_chapter.num).c_str());
+    std::string chapter_num_str = std::to_string(_current_chapter.num);
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(
+        std::vector<uint8_t>(chapter_num_str.begin(), chapter_num_str.end()), 
+        &hebEng5x7avia
+    ));
 
     text_box.setTextSize(3);
     text_box.setCursor(PAGE_WIDTH, 240);
-    text_box.print_hebrew(_page_manager.get_chapter_title(_current_chapter.num).c_str());
+    std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(
+        std::vector<uint8_t>(chapter_title.begin(), chapter_title.end()), 
+        &hebEng5x7avia
+    ));
     text_box.setTextSize(2);
 }
 
@@ -179,4 +185,9 @@ TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bo
         bottom, 
         WritingDirection::RTL
     );
+}
+
+const GFXfont* Book::get_font() const
+{
+    return &hebEng5x7avia;
 }
