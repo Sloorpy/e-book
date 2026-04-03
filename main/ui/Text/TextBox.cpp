@@ -86,6 +86,11 @@ void TextBox::center_cursor(const Line &line)
     }
 }
 
+bool TextBox::bottom_reached() const
+{
+    return _cursor.y + _font->yAdvance > _bottom;
+}
+
 int16_t TextBox::available_width() const {
     return _cursor.x - _left;
 }
@@ -106,13 +111,10 @@ size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center)
     BookString bs(str);
     const size_t original_len = str.size();
 
-    while (!bs.end()) {
+    while (!bs.end() && !bottom_reached()) {
         const Line line = bs.next_line(*this);
 
         if (line.empty()) {
-            if (_cursor.y > _bottom) {
-                break;
-            }
             continue;
         }
 
@@ -122,10 +124,6 @@ size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center)
 
         write_line(line);
         next_line();
-
-        if (_cursor.y > _bottom) {
-            break;
-        }
     }
 
     _display->setFont(old_font);
@@ -183,13 +181,10 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
 
     BookString bs(str);
 
-    while (!bs.end()) {
+    while (!bs.end() || !bottom_reached()) {
         const Line line = bs.next_line(*this);
 
         if (line.empty()) {
-            if (_cursor.y > _bottom) {
-                break;
-            }
             continue;
         }
 
@@ -208,10 +203,6 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
         }
 
         next_line();
-
-        if (_cursor.y > _bottom) {
-            break;
-        }
     }
 
     _cursor = original_cursor;

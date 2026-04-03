@@ -49,6 +49,7 @@ private:
     void write_line(const Line& line);
     int16_t line_height() const;
     void center_cursor(const Line& line);
+    bool bottom_reached() const;
 
 private:
     std::shared_ptr<Display> _display;
