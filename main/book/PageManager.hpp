@@ -21,7 +21,8 @@ public:
     explicit PageManager(const std::string_view& book_name);
 
 public:
-    std::string get_cover() const;
+    std::string get_title() const;
+    std::string get_author() const;
     std::string get_chapter_title(const uint16_t chapter_num) const;
 
     Chapter load_chapter(const uint16_t chapter_num, const GFXfont* font);

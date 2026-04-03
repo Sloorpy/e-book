@@ -11,6 +11,7 @@ TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t top,
                  int16_t right,
                  int16_t bottom,
+                 uint16_t text_size,
                  WritingDirection dir) :
     _display(std::move(display)),
     _font(&hebEng5x7avia),
@@ -19,8 +20,8 @@ TextBox::TextBox(std::shared_ptr<Display> display,
     _right(right),
     _bottom(bottom),
     _cursor{0, 0},
-    _textsize(1),
-    _text_color(0),
+    _textsize(text_size),
+    _text_color(static_cast<uint8_t>(Color::BLACK)),
     _direction(dir) 
 {
     resetCursor();
@@ -55,13 +56,13 @@ void TextBox::setTextColor(uint8_t color) {
 void TextBox::draw_char(const Vector2 position, const char letter)
 {
     _display->drawChar(
-                    position.x,
-                    position.y,
-                    letter,
-                    static_cast<uint8_t>(Color::BLACK),
-                    static_cast<uint8_t>(Color::WHITE),
-                    _textsize
-                );
+        position.x,
+        position.y,
+        letter,
+        static_cast<uint8_t>(Color::BLACK),
+        static_cast<uint8_t>(Color::WHITE),
+        _textsize
+    );
 }
 
 int16_t TextBox::line_height() const

@@ -13,9 +13,31 @@ PageManager::PageManager(const std::string_view &book_name) :
     _chapters_count = chapter_count();
 }
 
-std::string PageManager::get_cover() const
+
+std::string PageManager::get_title() const
 {
-    return File(book_file_path("cover")).read_all();
+    const std::string data = File(book_file_path("cover")).read_all();
+    size_t index = data.find('\n');
+
+    if (index == std::string::npos)
+    {
+        return data;
+    }
+
+    return data.substr(0, index);
+}
+
+std::string PageManager::get_author() const
+{
+    const std::string data = File(book_file_path("cover")).read_all();
+    size_t index = data.find('\n');
+
+    if (index == std::string::npos)
+    {
+        return data;
+    }
+
+    return data.substr(index + 1);
 }
 
 std::string PageManager::get_chapter_title(const uint16_t chapter_num) const

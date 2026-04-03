@@ -26,37 +26,34 @@ Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) 
 
 void Book::display_title()
 {
-    TextBox text_box = make_text_box(0, 2, PAGE_WIDTH, PAGE_HEIGHT);
+    static constexpr Vector2 TITLE_POSITION{0, 40};
+    static constexpr Vector2 AUTHOR_POSITION{0, 380};
+    static constexpr uint16_t TITLE_TEXT_SIZE = 5;
+    static constexpr uint16_t AUTHOR_TEXT_SIZE = 2;
     
-    text_box.setTextColor(static_cast<uint8_t>(Color::BLACK));
-    text_box.setFont(&hebEng5x7avia);
-    const std::string title = get_title();
-    const std::string author = get_author();
-    text_box.setTextSize(5);
-    text_box.setCursor(290, 40);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(title, &hebEng5x7avia), CENETER_TEXT);
+    const std::string title = _page_manager.get_title();
+    const std::string author = _page_manager.get_author();
+    
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);
+    TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
 
-    text_box.setTextSize(2);
-    text_box.setCursor(300, 380);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(author, &hebEng5x7avia));
+    title_tb.print_hebrew(TextHelper::serialize_to_font_indices(title, get_font()), CENETER_TEXT);
 
-    static constexpr uint16_t bmp_y = 150;
-    static uint16_t bmp_x = (PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2;
-    draw_cover(bmp_x,bmp_y);
+    author_tb.print_hebrew(TextHelper::serialize_to_font_indices(author, get_font()));
+    
+    static const Vector2 bitmap_position{(PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2, 150};
+    draw_cover(bitmap_position.x, bitmap_position.y);
 }
 
 void Book::no_more_pages()
 {
-    TextBox text_box = make_text_box(0, 2, PAGE_WIDTH, PAGE_HEIGHT);
+    static constexpr Vector2 TEXT_POSITION{0, 50};
+    static constexpr uint16_t TEXT_SIZE = 3;
+
+    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
     
-    text_box.setFont(&hebEng5x7avia);
-    text_box.setTextSize(3);
-    text_box.setTextColor(static_cast<uint8_t>(Color::BLACK));
     const char* msg = "נגמרו העמודים :)";
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(
-        std::vector<uint8_t>(msg, msg + strlen(msg)), 
-        &hebEng5x7avia
-    ));
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(msg, get_font()));
 }
 
 void Book::reset_book()
@@ -74,11 +71,13 @@ void Book::read_page()
         }
         return;
     }
+    static constexpr Vector2 TEXT_POSITION{0, 25};
+    static constexpr uint16_t TEXT_SIZE = 2;
+    static constexpr int16_t SPACE_BETWEEN_BORDER = 10;
 
-    TextBox text_box = make_text_box(0, 28, PAGE_WIDTH, PAGE_HEIGHT);
-    text_box.setTextSize(2);
-    _display->drawLine(0, 20, PAGE_WIDTH, 20, 0);
-    
+    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
+
+    _display->drawLine(0, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, PAGE_WIDTH, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, 0);
     const std::vector<uint8_t> curr_text(_current_chapter.pages.begin() + _current_chapter.pages_offset, _current_chapter.pages.end());
     //const size_t next_size = text_box.next_print_size(curr_text);
     const size_t bytes_written = text_box.print_hebrew(curr_text);
@@ -105,46 +104,19 @@ void Book::prev_page()
 
 void Book::display_chapter_title()
 { 
-    TextBox text_box = make_text_box(0, 2, PAGE_WIDTH, PAGE_HEIGHT);    
-    text_box.setTextColor(static_cast<uint8_t>(Color::BLACK));
-    text_box.setFont(&hebEng5x7avia);
+    static constexpr Vector2 NUMBER_POSITION{0, 80};
+    static constexpr Vector2 TITLE_POSITION{0, 240};
+    static constexpr uint16_t NUMBER_TEXT_SIZE = 12;
+    static constexpr uint16_t TITLE_TEXT_SIZE = 3;
+    
+    const std::string chapter_num_str = std::to_string(_current_chapter.num);
+    const std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
 
-    text_box.setTextSize(8);
-    text_box.setCursor(180, 80);
-    std::string chapter_num_str = std::to_string(_current_chapter.num);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(chapter_num_str, &hebEng5x7avia), CENETER_TEXT);
+    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);    
 
-    text_box.setTextSize(3);
-    text_box.setCursor(PAGE_WIDTH, 240);
-    std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(chapter_title, &hebEng5x7avia), CENETER_TEXT);
-    text_box.setTextSize(2);
-}
-
-std::string Book::get_title() const
-{
-    std::string cover = _page_manager.get_cover();
-    size_t index = cover.find('\n');
-
-    if (index == std::string::npos)
-    {
-        return cover;
-    }
-
-    return cover.substr(0, index);
-}
-
-std::string Book::get_author() const
-{
-    std::string cover = _page_manager.get_cover();
-    size_t index = cover.find('\n');
-
-    if (index == std::string::npos)
-    {
-        return cover;
-    }
-
-    return cover.substr(index + 1);
+    number_tb.print_hebrew(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), CENETER_TEXT);
+    title_tb.print_hebrew(TextHelper::serialize_to_font_indices(chapter_title, get_font()), CENETER_TEXT);
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
@@ -169,16 +141,20 @@ bool Book::has_prev_page() const
     return false;
 }
 
-TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom)
+TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size)
 {
-    return TextBox(
+    TextBox tb(
         _display,
         left,
         top,
         right, 
         bottom, 
+        text_size,
         WritingDirection::RTL
     );
+    tb.setFont(get_font());
+
+    return tb;
 }
 
 const GFXfont* Book::get_font() const

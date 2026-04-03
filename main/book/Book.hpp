@@ -35,7 +35,7 @@ private:
     const GFXfont* get_font() const;
     
 private:
-    TextBox make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom);
+    TextBox make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size);
 
 private:
     PageManager _page_manager;

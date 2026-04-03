@@ -15,6 +15,7 @@ public:
             int16_t top,
             int16_t right,
             int16_t bottom,
+            uint16_t text_size = 1,
             WritingDirection dir = WritingDirection::RTL);
 
 public:
