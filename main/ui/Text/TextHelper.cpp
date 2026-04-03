@@ -68,8 +68,8 @@ GFXglyph* TextHelper::get_char_font(const char letter, const GFXfont* font)
     return &font->glyph[glyphIndex];
 }
 
-bool TextHelper::is_char_in_font_range(uint8_t ch, const GFXfont* font) {
-    return font != nullptr && ch >= font->first && ch <= font->last;
+bool TextHelper::is_char_in_font_range(const uint8_t ch, const GFXfont* font) {
+    return font != nullptr && ((ch >= font->first && ch <= font->last) || ch == '\n');
 }
 
 std::vector<uint8_t> TextHelper::serialize_to_font_indices(

@@ -27,7 +27,7 @@ public:
     static uint8_t get_hebrew_font_char(const std::vector<uint8_t>& str);
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);
     static GFXglyph* get_char_font(const char letter, const GFXfont* font);
-    static bool is_char_in_font_range(uint8_t ch, const GFXfont* font);
+    static bool is_char_in_font_range(const uint8_t ch, const GFXfont* font);
     static std::vector<uint8_t> serialize_to_font_indices(const std::vector<uint8_t>& input, const GFXfont* font);
     static std::vector<uint8_t> serialize_to_font_indices(const std::string& input, const GFXfont* font);
 };

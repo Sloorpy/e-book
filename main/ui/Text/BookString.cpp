@@ -5,16 +5,17 @@
 #include <cstring>
 
 BookString::BookString(const std::vector<uint8_t>& data)
-    : _str(data), _pos(0) {}
+    : _str(data), _pos(0) 
+{}
 
 BookString::BookString(const char* str)
     : _str(reinterpret_cast<const uint8_t*>(str), reinterpret_cast<const uint8_t*>(str) + strlen(str)), _pos(0) {}
 
-bool BookString::is_char_at(size_t pos, char c) const {
+bool BookString::is_char_at(const size_t pos, const char c) const {
     return pos < _str.size() && static_cast<char>(_str[pos]) == c;
 }
 
-size_t BookString::find_delimiter(size_t start) const {
+size_t BookString::find_delimiter(const size_t start) const {
     for (size_t i = start; i < _str.size(); ++i) {
         char c = static_cast<char>(_str[i]);
         if (c == ' ' || c == '\n' || c == '\r') {

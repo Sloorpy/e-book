@@ -23,8 +23,8 @@ private:
     size_t next_hebrew_word_size() const;
     bool is_end() const;
     bool is_space() const;
-    bool is_char_at(size_t pos, char c) const;
-    size_t find_delimiter(size_t start) const;
+    bool is_char_at(const size_t pos, const char c) const;
+    size_t find_delimiter(const size_t start) const;
 
 private:
     std::vector<uint8_t> _str;

@@ -30,8 +30,6 @@ public:
 public:
     size_t print_hebrew(const std::vector<uint8_t>& str);
     size_t next_print_size(const std::vector<uint8_t>& str);
-    void write_word(const Word& word);
-    void write_line(const Line& line);
     void next_line();
 
 public:
@@ -46,8 +44,9 @@ public:
     int16_t space_width() const;
 
 private:
-        void draw_char(const Vector2 position, const char letter);
-
+    void draw_char(const Vector2 position, const char letter);
+    void write_word(const Word& word);
+    void write_line(const Line& line);
     int16_t line_height() const;
 
 private:
