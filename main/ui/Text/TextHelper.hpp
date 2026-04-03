@@ -1,4 +1,6 @@
 #pragma once
+#include "Word.hpp"
+
 #include <cstdint>
 #include <cstddef>
 #include <vector>
@@ -26,6 +28,8 @@ public:
     static TextCharKind classify(const std::vector<uint8_t>& str, size_t index);
     static uint8_t get_hebrew_font_char(const std::vector<uint8_t>& str);
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);
+    static uint16_t line_width(const Line& line, const TextBox& tb);
+    static size_t space_width(const TextBox& tb);
     static GFXglyph* get_char_font(const char letter, const GFXfont* font);
     static bool is_char_in_font_range(const uint8_t ch, const GFXfont* font);
     static std::vector<uint8_t> serialize_to_font_indices(const std::vector<uint8_t>& input, const GFXfont* font);

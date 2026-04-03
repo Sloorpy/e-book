@@ -1,4 +1,5 @@
 #include "TextHelper.hpp"
+#include "TextBox.hpp"
 #include <vector>
 
 bool TextHelper::is_hebrew_utf8_prefix(uint8_t byte) {
@@ -51,6 +52,23 @@ size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {
         }
     }
     return count;
+}
+
+uint16_t TextHelper::line_width(const Line &line, const TextBox &tb)
+{
+    uint16_t width = 0;
+    for (const Word& word: line) {
+        width += word.calc_word_width(tb);
+        width += TextHelper::space_width(tb);
+    }
+    width -= TextHelper::space_width(tb);
+    return width;
+}
+
+size_t TextHelper::space_width(const TextBox &tb)
+{
+    return static_cast<int16_t>(tb.textSize()) *
+           static_cast<int16_t>(tb.font()->glyph[' ' - tb.font()->first].xAdvance);
 }
 
 GFXglyph* TextHelper::get_char_font(const char letter, const GFXfont* font)

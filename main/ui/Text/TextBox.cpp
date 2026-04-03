@@ -73,16 +73,29 @@ int16_t TextBox::line_height() const
             static_cast<int16_t>(_font->yAdvance);
 }
 
+void TextBox::center_cursor(const Line &line)
+{
+    const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
+    const int16_t side_padding = (width() - line_width) / 2;
+
+    if (_direction == WritingDirection::RTL) {
+        _cursor.x = line_start_x() - side_padding;
+    } 
+    else {
+        _cursor.x = line_start_x() + side_padding;
+    }
+}
+
 int16_t TextBox::available_width() const {
     return _cursor.x - _left;
 }
 
-int16_t TextBox::space_width() const {
-    return static_cast<int16_t>(_textsize) *
-           static_cast<int16_t>(_font->glyph[' ' - _font->first].xAdvance);
+int16_t TextBox::width() const
+{
+    return _right - _left;
 }
 
-size_t TextBox::print_hebrew(const std::vector<uint8_t>& str) {
+size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center) {
     if (_font == nullptr) {
         return 0;
     }
@@ -101,6 +114,10 @@ size_t TextBox::print_hebrew(const std::vector<uint8_t>& str) {
                 break;
             }
             continue;
+        }
+
+        if (center) {
+            center_cursor(line);
         }
 
         write_line(line);
@@ -141,7 +158,7 @@ void TextBox::write_line(const Line &line)
         write_word(word);
 
         if (&word != &last_word) {
-            _cursor.x -= space_width();
+            _cursor.x -= TextHelper::space_width(*this);
 
             if (_cursor.x < left()) {
                 break;
@@ -182,7 +199,7 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
             _cursor.x -= word_width;
 
             if (&word != &last_word) {
-                _cursor.x -= space_width();
+                _cursor.x -= TextHelper::space_width(*this);
 
                 if (_cursor.x < _left) {
                     break;

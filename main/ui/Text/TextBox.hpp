@@ -28,7 +28,7 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t print_hebrew(const std::vector<uint8_t>& str);
+    size_t print_hebrew(const std::vector<uint8_t>& str, const bool center=false);
     size_t next_print_size(const std::vector<uint8_t>& str);
     void next_line();
 
@@ -41,13 +41,14 @@ public:
 
 public:
     int16_t available_width() const;
-    int16_t space_width() const;
-
+    int16_t width() const;
+    
 private:
     void draw_char(const Vector2 position, const char letter);
     void write_word(const Word& word);
     void write_line(const Line& line);
     int16_t line_height() const;
+    void center_cursor(const Line& line);
 
 private:
     std::shared_ptr<Display> _display;

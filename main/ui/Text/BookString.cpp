@@ -121,11 +121,11 @@ Line BookString::next_line(const TextBox& tb) {
         line_width += word_width;
 
         if (!is_end() && !is_space()) {
-            int after_space = tb.line_start_x() - line_width - tb.space_width();
+            int after_space = tb.line_start_x() - line_width - TextHelper::space_width(tb);
             if (after_space < tb.left()) {
                 break;
             }
-            line_width += tb.space_width();
+            line_width += TextHelper::space_width(tb);
         }
     }
 

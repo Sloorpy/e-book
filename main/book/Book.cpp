@@ -8,6 +8,7 @@
 #include <cstring>
 
 static constexpr char TAG[] = "Book";
+static constexpr bool CENETER_TEXT = true;
 
 static constexpr uint16_t MIDDLE_X = 270;
 static constexpr uint16_t MIDDLE_Y = 75;
@@ -33,7 +34,7 @@ void Book::display_title()
     const std::string author = get_author();
     text_box.setTextSize(5);
     text_box.setCursor(290, 40);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(title, &hebEng5x7avia));
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(title, &hebEng5x7avia), CENETER_TEXT);
 
     text_box.setTextSize(2);
     text_box.setCursor(300, 380);
@@ -104,26 +105,19 @@ void Book::prev_page()
 
 void Book::display_chapter_title()
 { 
-    TextBox text_box = make_text_box(0, 2, PAGE_WIDTH, PAGE_HEIGHT);
-    
+    TextBox text_box = make_text_box(0, 2, PAGE_WIDTH, PAGE_HEIGHT);    
     text_box.setTextColor(static_cast<uint8_t>(Color::BLACK));
     text_box.setFont(&hebEng5x7avia);
 
     text_box.setTextSize(8);
     text_box.setCursor(180, 80);
     std::string chapter_num_str = std::to_string(_current_chapter.num);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(
-        std::vector<uint8_t>(chapter_num_str.begin(), chapter_num_str.end()), 
-        &hebEng5x7avia
-    ));
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(chapter_num_str, &hebEng5x7avia), CENETER_TEXT);
 
     text_box.setTextSize(3);
     text_box.setCursor(PAGE_WIDTH, 240);
     std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(
-        std::vector<uint8_t>(chapter_title.begin(), chapter_title.end()), 
-        &hebEng5x7avia
-    ));
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(chapter_title, &hebEng5x7avia), CENETER_TEXT);
     text_box.setTextSize(2);
 }
 
