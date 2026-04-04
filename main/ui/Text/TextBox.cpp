@@ -197,7 +197,6 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const bool cent
             center_cursor(line);
         }
 
-        write_line(line);
         next_line();
     }
 
