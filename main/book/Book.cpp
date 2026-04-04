@@ -99,7 +99,7 @@ void Book::display_current_page()
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().start,
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
     );
-    
+
     make_page_text_box().print_hebrew(curr_text);
 }
 
@@ -107,7 +107,7 @@ void Book::reset_book()
 {
     _current_chapter = BASE_CHAPTER;
     _view_state = BookViewState::BOOK_TITLE;
-    render_current_view();
+    render_and_save();
 }
 
 void Book::first_chapter_title()
