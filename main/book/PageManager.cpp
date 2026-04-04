@@ -144,12 +144,10 @@ Chapter PageManager::load_chapter(const uint16_t chapter_num, const GFXfont* fon
     const std::string chapter_path = chapter_file_path(chapter_num, "chapter");
     const std::string pages_path = chapter_file_path(chapter_num, "pages");
 
-    static constexpr size_t START_OFFSET = 0;
     return Chapter{
-        std::stack<size_t>(),
+        std::stack<PageRange>(),
         TextHelper::serialize_to_font_indices(File(pages_path, "r").read_all_bytes(), font),
         File(chapter_path, "r").read_all(),
-        START_OFFSET,
         chapter_num
     };
 }

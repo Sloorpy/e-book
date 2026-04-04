@@ -10,11 +10,15 @@
 #include <stack>
 #include <gfxfont.h>
 
+struct PageRange final {
+    size_t start;
+    size_t end;
+};
+
 struct Chapter final {
-    std::stack<size_t> page_indicies;
+    std::stack<PageRange> page_indicies;
     std::vector<uint8_t> pages;
     std::string chapter_title;
-    size_t pages_offset;
     uint16_t num;
 };
 

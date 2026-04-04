@@ -23,7 +23,7 @@ public:
 public:
     void next_page();
     void prev_page();
-    void read_page();
+    void curr_page();
     void reset_book();
 
 public:
@@ -32,22 +32,28 @@ public:
 
 private:
     void render_current_view();
+    void render_and_save();
     void display_title();
     void no_more_pages();
-    size_t print_page();
+    size_t print_page(const std::vector<uint8_t>& text);
+    size_t print_page_size(const std::vector<uint8_t> &text);
+    size_t print_current_page();
 
 private:
-    void handle_chapter_title();
+    void display_chapter_title();
     void display_header();
     void load_chapter_save();
-    size_t current_page_size() const;
+
+private:
+    void first_chapter_title();
+    void load_all_pages();
+    void prev_chapter_last_page();
 
 private:
     void draw_cover(const uint16_t x, const uint16_t y);
+    void build_page_indices(size_t end_offset);
     BookViewState handle_next_chapter();
     BookViewState handle_prev_chapter();
-    BookViewState step_back_within_loaded_chapter();
-    void build_page_indices(size_t end_offset);
 
 private:
     const GFXfont* get_font() const;

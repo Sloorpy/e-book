@@ -12,7 +12,7 @@
 
 static constexpr char TAG[] = "Book";
 static constexpr bool CENETER_TEXT = true;
-static const Chapter BASE_CHAPTER{{}, {}, "", 0, 0};
+static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 
 static constexpr Vector2 TEXT_POSITION{0, 26};
 static constexpr uint16_t TEXT_SIZE = 2;
@@ -30,23 +30,27 @@ Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) 
 
 void Book::render_current_view()
 {
-    if (_view_state == BookViewState::BOOK_TITLE) {
-        display_title();
-        return;
+    switch(_view_state) {
+        case BookViewState::BOOK_TITLE:
+            display_title();
+            break;
+        case BookViewState::CHAPTER_TITLE:
+            display_chapter_title();
+            break;
+        case BookViewState::FINISHED:
+            no_more_pages();
+            break;
+        case BookViewState::PAGE:
+            print_current_page();
+            display_header();    
+            break;
     }
-    
-    if (_view_state == BookViewState::CHAPTER_TITLE) {
-        handle_chapter_title();
-        return;
-    }
+}
 
-    if (_view_state == BookViewState::FINISHED) {
-        no_more_pages();
-        return;
-    }
-    
-    print_page();
-    display_header();
+void Book::render_and_save()
+{
+    render_current_view();
+    _page_manager.save_state(current_state());
 }
 
 void Book::display_title()
@@ -80,13 +84,26 @@ void Book::no_more_pages()
     text_box.print_hebrew(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
 }
 
-size_t Book::print_page()
+size_t Book::print_page(const std::vector<uint8_t>& text)
 {
-    const std::vector<uint8_t> curr_text(
-        _current_chapter.pages.begin() + _current_chapter.pages_offset,
-        _current_chapter.pages.end()
-    );
+    return make_page_text_box().print_hebrew(text);
+}
 
+size_t Book::print_page_size(const std::vector<uint8_t>& text)
+{
+    return make_page_text_box().next_print_size(text);
+}
+
+size_t Book::print_current_page()
+{
+    if (_current_chapter.page_indicies.empty()) {
+        throw std::runtime_error("No current page found. Can't load page");
+    }
+
+    const std::vector<uint8_t> curr_text(
+        _current_chapter.pages.begin() + _current_chapter.page_indicies.top().start,
+        _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
+    );
     return make_page_text_box().print_hebrew(curr_text);
 }
 
@@ -97,85 +114,102 @@ void Book::reset_book()
     render_current_view();
 }
 
+void Book::first_chapter_title()
+{
+    if (_current_chapter.num != 1) {
+        _current_chapter = _page_manager.load_chapter(1, get_font());
+    }
+
+    _view_state = BookViewState::CHAPTER_TITLE;
+}
+
+void Book::load_all_pages()
+{
+    if (_current_chapter.page_indicies.empty() && _current_chapter.num > 0) {
+        build_page_indices(_current_chapter.pages.size());
+    }
+
+    if (!_current_chapter.page_indicies.empty()) {
+        _view_state = BookViewState::PAGE;
+    }
+    else {
+        _view_state = BookViewState::CHAPTER_TITLE;
+    }
+}
+
+void Book::prev_chapter_last_page()
+{
+    if (_current_chapter.num <= 1) {
+        _view_state = BookViewState::BOOK_TITLE;
+        _current_chapter = BASE_CHAPTER;
+        return;
+    }
+
+    const uint16_t prev_chapter = _current_chapter.num - 1;
+    _current_chapter = _page_manager.load_chapter(prev_chapter, get_font());
+    build_page_indices(_current_chapter.pages.size());
+
+    if (!_current_chapter.page_indicies.empty()) {
+        _view_state = BookViewState::PAGE;
+    }
+    else {
+        _view_state = BookViewState::CHAPTER_TITLE;
+    }
+}
+
 void Book::next_page()
 {
-    switch(_view_state) {
+    switch (_view_state) {
         case BookViewState::BOOK_TITLE:
-            if (_current_chapter.num != 1) {
-                _current_chapter = _page_manager.load_chapter(1, get_font());
-            }
-
-            _view_state = BookViewState::CHAPTER_TITLE;
-            _page_manager.save_state(current_state());
-            render_current_view();
+            first_chapter_title();
+            render_and_save();
             break;
+
         case BookViewState::FINISHED:
             no_more_pages();
             break;
+
         case BookViewState::CHAPTER_TITLE:
             _view_state = BookViewState::PAGE;
             [[fallthrough]];
+
         case BookViewState::PAGE:
-            read_page();
-            _page_manager.save_state(current_state());
+            _view_state = handle_next_chapter();
+            render_and_save();
             break;
     }
 }
 
 void Book::prev_page()
 {
-    if (_view_state == BookViewState::BOOK_TITLE) {
-        render_current_view();
-        return;
-    }
-
-    if (_view_state == BookViewState::FINISHED) {
-        if (_current_chapter.page_indicies.empty() && _current_chapter.num > 0) {
-            build_page_indices(_current_chapter.pages.size());
-        }
-
-        _view_state = handle_prev_chapter();
-        render_current_view();
-        _page_manager.save_state(current_state());
-        return;
-    }
-
-    if (_view_state == BookViewState::CHAPTER_TITLE) {
-        if (_current_chapter.num <= 1) {
-            _view_state = BookViewState::BOOK_TITLE;
+    switch (_view_state) {
+        case BookViewState::BOOK_TITLE:
             render_current_view();
-            _page_manager.save_state(current_state());
-            return;
-        }
+            break;
 
-        // go back a chapter
-        const uint16_t prev_chapter = _current_chapter.num - 1;
-        _current_chapter = _page_manager.load_chapter(prev_chapter, get_font());
-        build_page_indices(_current_chapter.pages.size());
+        case BookViewState::CHAPTER_TITLE:
+            prev_chapter_last_page();
+            render_and_save();
+            break;
+
+        case BookViewState::FINISHED:
+            load_all_pages();
+            render_and_save();
+            break;
+
+        case BookViewState::PAGE:
+            _view_state = handle_prev_chapter();
+            render_and_save();
+            break;
     }
-
-    _view_state = handle_prev_chapter();
-    render_current_view();
-    _page_manager.save_state(current_state());
 }
 
-void Book::read_page()
+void Book::curr_page()
 {
-    if (_view_state != BookViewState::PAGE) {
-        return;
-    }
-
-    _current_chapter.page_indicies.push(_current_chapter.pages_offset);
-
-    const size_t bytes_written = print_page();
-    display_header();
-
-    _current_chapter.pages_offset += bytes_written;
-
-    _view_state = handle_next_chapter();
+    render_and_save();
 }
 
-void Book::handle_chapter_title()
+void Book::display_chapter_title()
 {
     static constexpr Vector2 NUMBER_POSITION{0, 80};
     static constexpr Vector2 TITLE_POSITION{0, 240};
@@ -195,16 +229,6 @@ void Book::handle_chapter_title()
 void Book::display_header()
 {
     _display->drawLine(0, BORDER_Y, PAGE_WIDTH, BORDER_Y, 0);
-}
-
-size_t Book::current_page_size() const
-{
-    const std::vector<uint8_t> curr_text(
-        _current_chapter.pages.begin() + _current_chapter.pages_offset,
-        _current_chapter.pages.end()
-    );
-
-    return make_page_text_box().next_print_size(curr_text);
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
@@ -246,10 +270,19 @@ void Book::load_chapter_save()
     }
 
     _current_chapter = _page_manager.load_chapter(chapter_num, get_font());
-    _current_chapter.pages_offset = std::min(state.index, _current_chapter.pages.size());
-    _view_state = _current_chapter.pages_offset > 0 ? BookViewState::PAGE : BookViewState::CHAPTER_TITLE;
+    const size_t chapter_offset =  std::min(state.index, _current_chapter.pages.size());
+    
+    if (_current_chapter.num >= _page_manager.chapter_count() && chapter_offset >= _current_chapter.pages.size()) {
+        _view_state = BookViewState::FINISHED;
+    } 
+    else if (chapter_offset > 0) {
+        _view_state = BookViewState::PAGE;
+    }
+    else {
+        _view_state =  BookViewState::CHAPTER_TITLE;
+    }
 
-    build_page_indices(_current_chapter.pages_offset);
+    build_page_indices(chapter_offset);
 }
 
 TextBox Book::make_header_text_box() const
@@ -268,15 +301,11 @@ StateInfo Book::current_state() const
         return StateInfo{0, 0};
     }
 
-    if (_view_state == BookViewState::FINISHED) {
-        return StateInfo{0, 0};
-    }
-
-    if (_view_state == BookViewState::CHAPTER_TITLE) {
+    if (_view_state == BookViewState::CHAPTER_TITLE || _current_chapter.page_indicies.empty()) {
         return StateInfo{_current_chapter.num, 0};
     }
 
-    return StateInfo{_current_chapter.num, _current_chapter.pages_offset};
+    return StateInfo{_current_chapter.num, _current_chapter.page_indicies.top().end};
 }
 
 TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size) const
@@ -302,39 +331,52 @@ const GFXfont* Book::get_font() const
 
 BookViewState Book::handle_next_chapter()
 {
-    if (_current_chapter.pages_offset < _current_chapter.pages.size()) {
-        return BookViewState::PAGE;
-    }
+    if (!_current_chapter.page_indicies.empty() && _current_chapter.page_indicies.top().end >= _current_chapter.pages.size())
+    {
+        printf("%d ", _current_chapter.page_indicies.size());
+        printf("%d %d \n", _current_chapter.page_indicies.top().start, _current_chapter.page_indicies.top().end);
 
-    const uint16_t next_chapter = _current_chapter.num + 1;
-    if (next_chapter <= _page_manager.chapter_count()) {
+        const uint16_t next_chapter = _current_chapter.num + 1;
+        if (next_chapter > _page_manager.chapter_count()) {
+            return BookViewState::FINISHED;
+        }
+
         _current_chapter = _page_manager.load_chapter(next_chapter, get_font());
         return BookViewState::CHAPTER_TITLE;
     }
+    
+    size_t page_start = 0;
+    if (!_current_chapter.page_indicies.empty()) {
+        page_start = _current_chapter.page_indicies.top().end;
+    }
+    
+    const std::vector<uint8_t> curr_text(
+        _current_chapter.pages.begin() + page_start,
+        _current_chapter.pages.end()
+    );
 
-    return BookViewState::FINISHED;
+    const size_t bytes_written = print_page_size(curr_text);   
+    if (bytes_written == 0) {
+        throw std::runtime_error("Tried to get print page size for `next_page` but got size of 0");
+    }
+
+    _current_chapter.page_indicies.push(PageRange{page_start, page_start + bytes_written});
+
+    return BookViewState::PAGE;
 }
 
 BookViewState Book::handle_prev_chapter()
 {
-    return step_back_within_loaded_chapter();
-}
-
-BookViewState Book::step_back_within_loaded_chapter()
-{
     if (_current_chapter.page_indicies.empty()) {
-        _current_chapter.pages_offset = 0;
         return BookViewState::CHAPTER_TITLE;
     }
 
     _current_chapter.page_indicies.pop();
 
     if (_current_chapter.page_indicies.empty()) {
-        _current_chapter.pages_offset = 0;
         return BookViewState::CHAPTER_TITLE;
     }
 
-    _current_chapter.pages_offset = _current_chapter.page_indicies.top();
     return BookViewState::PAGE;
 }
 
@@ -344,12 +386,12 @@ void Book::build_page_indices(size_t end_offset)
         end_offset = _current_chapter.pages.size();
     }
 
-    _current_chapter.page_indicies = std::stack<size_t>();
-
+    _current_chapter.page_indicies = std::stack<PageRange>();
+ 
     size_t offset = 0;
     TextBox temp_tb = make_page_text_box();
     while (offset < end_offset) {
-        _current_chapter.page_indicies.push(offset);
+        const size_t start_offset = offset;
 
         const std::vector<uint8_t> page(
             _current_chapter.pages.begin() + offset,
@@ -360,7 +402,8 @@ void Book::build_page_indices(size_t end_offset)
         if (page_size == 0) {
             break;
         }
-        
+
         offset += page_size;
+        _current_chapter.page_indicies.push(PageRange{start_offset, offset});
     }
 }
