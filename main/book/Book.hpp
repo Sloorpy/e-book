@@ -35,7 +35,6 @@ private:
     void render_and_save();
     void display_title();
     void no_more_pages();
-    size_t print_page(const std::vector<uint8_t>& text);
     size_t print_page_size(const std::vector<uint8_t> &text);
     size_t print_current_page();
 

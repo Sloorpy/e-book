@@ -84,11 +84,6 @@ void Book::no_more_pages()
     text_box.print_hebrew(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
 }
 
-size_t Book::print_page(const std::vector<uint8_t>& text)
-{
-    return make_page_text_box().print_hebrew(text);
-}
-
 size_t Book::print_page_size(const std::vector<uint8_t>& text)
 {
     return make_page_text_box().next_print_size(text);
@@ -333,9 +328,6 @@ BookViewState Book::handle_next_chapter()
 {
     if (!_current_chapter.page_indicies.empty() && _current_chapter.page_indicies.top().end >= _current_chapter.pages.size())
     {
-        printf("%d ", _current_chapter.page_indicies.size());
-        printf("%d %d \n", _current_chapter.page_indicies.top().start, _current_chapter.page_indicies.top().end);
-
         const uint16_t next_chapter = _current_chapter.num + 1;
         if (next_chapter > _page_manager.chapter_count()) {
             return BookViewState::FINISHED;

@@ -18,7 +18,7 @@ BookState::BookState(const std::string_view& book_name, std::unique_ptr<Display>
 void BookState::main()
 {
     _display->fill_screen(Color::WHITE);
-    _book->next_page();
+    _book->curr_page();
     _display->update();
 }
 
