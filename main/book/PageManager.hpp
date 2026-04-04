@@ -7,9 +7,11 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <stack>
 #include <gfxfont.h>
 
 struct Chapter final {
+    std::stack<size_t> page_indicies;
     std::vector<uint8_t> pages;
     std::string chapter_title;
     size_t pages_offset;

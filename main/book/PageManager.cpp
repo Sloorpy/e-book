@@ -77,6 +77,11 @@ StateInfo PageManager::load_state(const uint16_t state_num)
     const std::string path = book_file_path("state_" + std::to_string(state_num));
     const std::string data = File(path, "r").read_all();
     const size_t split_offset = data.find_first_of('\n'); 
+    
+    if (split_offset == std::string::npos) {
+        return StateInfo{0,0};
+    }
+
     const std::string chapter_num_str = data.substr(0, split_offset);
     const std::string index_str = data.substr(split_offset + 1);
     uint16_t chapter_val = 0;
@@ -141,6 +146,7 @@ Chapter PageManager::load_chapter(const uint16_t chapter_num, const GFXfont* fon
 
     static constexpr size_t START_OFFSET = 0;
     return Chapter{
+        std::stack<size_t>(),
         TextHelper::serialize_to_font_indices(File(pages_path, "r").read_all_bytes(), font),
         File(chapter_path, "r").read_all(),
         START_OFFSET,

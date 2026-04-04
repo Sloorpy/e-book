@@ -17,8 +17,8 @@ public:
 
     Button(gpio_num_t pin,
            uint32_t debounce_ms = 30,
-           uint32_t long_press_ms = 350,
-           uint32_t double_click_ms = 500);
+           uint32_t long_press_ms = 450,
+           uint32_t double_click_ms = 600);
 
     esp_err_t init();
     void update();

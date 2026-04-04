@@ -18,42 +18,29 @@ BookState::BookState(const std::string_view& book_name, std::unique_ptr<Display>
 void BookState::main()
 {
     _display->fill_screen(Color::WHITE);
-
-    _book->display_title(); // Show text
-
+    _book->next_page();
     _display->update();
 }
 
 void BookState::on_click()
 {
     _display->fill_screen(Color::WHITE);
-
-    if (!_book->has_next_page()) {
-        _book->no_more_pages();
-    }
-    else {
-        _book->read_page();
-    }
+    _book->next_page();
     _display->update();
 }
 
 void BookState::on_double_click()
 {
     _display->fill_screen(Color::WHITE);
-
-    if (!_book->has_prev_page()) {
-        _book->display_title();
-    }
-    else {
-        _book->prev_page();
-    }
+    _book->prev_page();
     _display->update();
 }
 
 void BookState::on_hold()
 {
+    _display->fill_screen(Color::WHITE);
     _book->reset_book();
-    main();
+    _display->update();
 }
 
 std::unique_ptr<Book> BookState::create_book(const std::string_view &book_name)
