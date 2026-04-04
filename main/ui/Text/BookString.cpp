@@ -79,7 +79,6 @@ void BookString::skip_word() {
     if (!word.bytes.empty()) {
         _pos += word.bytes.size();
     }
-    skip_spaces();
 }
 
 Word BookString::next_word() {
@@ -109,24 +108,20 @@ Line BookString::next_line(const TextBox& tb) {
             break;
         }
 
-        int word_width = peek_word.calc_word_width(tb);
-        int next_cursor_x = tb.line_start_x() - line_width - word_width;
+        const int word_width = peek_word.calc_word_width(tb);
+        const int extra_space = line.empty() ? 0 : TextHelper::space_width(tb);
+        const int candidate_width = line_width + extra_space + word_width;
 
-        if (line_width > 0 && next_cursor_x < tb.left()) {
+        if (!line.empty() && candidate_width > tb.width()) {
             break;
         }
 
-        Word word = next_word();
-        line.push_back(word);
-        line_width += word_width;
-
-        if (!is_end() && !is_space()) {
-            int after_space = tb.line_start_x() - line_width - TextHelper::space_width(tb);
-            if (after_space < tb.left()) {
-                break;
-            }
+        if (!line.empty()) {
             line_width += TextHelper::space_width(tb);
         }
+
+        line.push_back(next_word());
+        line_width += word_width;
     }
 
     return line;
