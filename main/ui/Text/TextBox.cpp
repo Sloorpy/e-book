@@ -182,7 +182,7 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
 
     BookString bs(str);
 
-    while (!bs.end() || !bottom_reached()) {
+    while (!bs.end() && !bottom_reached()) {
         const Line line = bs.next_line(*this);
 
         if (line.empty()) {
