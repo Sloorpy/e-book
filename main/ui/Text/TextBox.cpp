@@ -205,3 +205,42 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const bool cent
     _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
 }
+
+size_t TextBox::print(const std::string& str) {
+    const GFXfont* old_font = _display->getFont();
+    _display->setFont(_font);
+
+    size_t count = 0;
+    for (char ch : str) {
+        if (ch == '\n') {
+            _cursor.y += line_height();
+            _cursor.x = _left;
+            count++;
+            continue;
+        }
+
+        GFXglyph* glyph = TextHelper::get_char_font(ch, _font);
+        if (glyph == nullptr) {
+            count++;
+            continue;
+        }
+
+        int16_t char_width = static_cast<int16_t>(glyph->xAdvance) * static_cast<int16_t>(_textsize);
+
+        if (_cursor.x + char_width > _right) {
+            _cursor.y += line_height();
+            _cursor.x = _left;
+        }
+
+        if (_cursor.y + line_height() > _bottom) {
+            break;
+        }
+
+        _display->drawChar(_cursor.x, _cursor.y, ch, _text_color, static_cast<uint8_t>(Color::WHITE), _textsize);
+        _cursor.x += char_width;
+        count++;
+    }
+
+    _display->setFont(old_font);
+    return count;
+}
