@@ -16,6 +16,11 @@ struct Chapter final {
     uint16_t num;
 };
 
+struct StateInfo final {
+    uint16_t chapter_num;
+    size_t index;
+};
+
 class PageManager final {
 public:
     explicit PageManager(const std::string_view& book_name);
@@ -27,6 +32,7 @@ public:
 
     Chapter load_chapter(const uint16_t chapter_num, const GFXfont* font);
     uint16_t chapter_count() const;
+    StateInfo load_state(const uint16_t state_num=1);
 
 private:
     std::string book_root_path() const;

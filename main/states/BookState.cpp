@@ -39,6 +39,15 @@ void BookState::on_click()
 
 void BookState::on_double_click()
 {
+    _display->fill_screen(Color::WHITE);
+
+    if (!_book->has_prev_page()) {
+        _book->display_title();
+    }
+    else {
+        _book->prev_page();
+    }
+    _display->update();
 }
 
 void BookState::on_hold()

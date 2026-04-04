@@ -72,6 +72,24 @@ uint16_t PageManager::chapter_count() const
     return static_cast<uint16_t>(num);
 }
 
+StateInfo PageManager::load_state(const uint16_t state_num)
+{
+    const std::string path = book_file_path("state_" + std::to_string(state_num));
+    const std::string data = File(path).read_all();
+    const size_t split_offset = data.find_first_of('\n'); 
+    const std::string chapter_num_str = data.substr(0, split_offset);
+    const std::string index_str = data.substr(split_offset + 1);
+    uint16_t chapter_val = 0;
+    size_t index = 0;
+    std::from_chars(chapter_num_str.c_str(), chapter_num_str.c_str() + chapter_num_str.size(), chapter_val);
+    std::from_chars(index_str.c_str(), index_str.c_str() + index_str.size(), index);
+
+    return StateInfo{
+        chapter_val,
+        index
+    };
+}
+
 std::string PageManager::book_root_path() const
 {
     std::string path;

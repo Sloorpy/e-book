@@ -9,17 +9,12 @@
 
 static constexpr char TAG[] = "Book";
 static constexpr bool CENETER_TEXT = true;
-
-static constexpr uint16_t MIDDLE_X = 270;
-static constexpr uint16_t MIDDLE_Y = 75;
-static constexpr uint16_t BOTTOM_X = 300;
-static constexpr uint16_t BOTTOM_Y = 375;
 static const Chapter BASE_CHAPTER{{}, "", 0, 0};
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
     _page_manager(book_name),
-    _current_chapter(BASE_CHAPTER),
     _page_indexs(),
+    _current_chapter(initialize_chapter()),
     _display(display)
     {}
 
@@ -71,18 +66,17 @@ void Book::read_page()
         }
         return;
     }
-    static constexpr Vector2 TEXT_POSITION{0, 25};
+    static constexpr Vector2 TEXT_POSITION{0, 26};
     static constexpr uint16_t TEXT_SIZE = 2;
     static constexpr int16_t SPACE_BETWEEN_BORDER = 10;
+    const uint16_t border_y = TEXT_POSITION.y - SPACE_BETWEEN_BORDER;
 
-    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
+    //const size_t bytes_written = text_box.print_hebrew(curr_text);
+    TextBox text_tb = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
+    TextBox header_tb = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
 
-    _display->drawLine(0, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, PAGE_WIDTH, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, 0);
-    const std::vector<uint8_t> curr_text(_current_chapter.pages.begin() + _current_chapter.pages_offset, _current_chapter.pages.end());
-    //const size_t next_size = text_box.next_print_size(curr_text);
-    const size_t bytes_written = text_box.print_hebrew(curr_text);
-    _page_indexs.push(_current_chapter.pages_offset);
-    _current_chapter.pages_offset += bytes_written;
+    display_page(text_tb);
+    display_header(header_tb, border_y);
 }
 
 
@@ -100,6 +94,16 @@ void Book::prev_page()
         display_chapter_title();
         return;
     }
+    
+    static constexpr Vector2 TEXT_POSITION{0, 25};
+    static constexpr uint16_t TEXT_SIZE = 2;
+    static constexpr int16_t SPACE_BETWEEN_BORDER = 10;
+
+    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
+
+    _display->drawLine(0, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, PAGE_WIDTH, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, 0);
+    const std::vector<uint8_t> curr_text(_current_chapter.pages.begin() + _current_chapter.pages_offset, _current_chapter.pages.end());
+
 }
 
 void Book::display_chapter_title()
@@ -117,6 +121,19 @@ void Book::display_chapter_title()
 
     number_tb.print_hebrew(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), CENETER_TEXT);
     title_tb.print_hebrew(TextHelper::serialize_to_font_indices(chapter_title, get_font()), CENETER_TEXT);
+}
+
+void Book::display_header(TextBox& tb, const uint16_t y_border)
+{
+    _display->drawLine(0, y_border, PAGE_WIDTH, y_border, 0);
+}
+
+void Book::display_page(TextBox& tb)
+{    
+    const std::vector<uint8_t> curr_text(_current_chapter.pages.begin() + _current_chapter.pages_offset, _current_chapter.pages.end());
+    const size_t bytes_written = tb.print_hebrew(curr_text);
+    _page_indexs.push(_current_chapter.pages_offset);
+    _current_chapter.pages_offset += bytes_written;
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
@@ -141,6 +158,18 @@ bool Book::has_prev_page() const
     return false;
 }
 
+Chapter Book::initialize_chapter()
+{
+    StateInfo state = _page_manager.load_state();
+    if (state.chapter_num <= 0 || state.chapter_num > _page_manager.chapter_count()) {
+        return _page_manager.load_chapter(1, get_font());
+    }
+
+    Chapter chapter = _page_manager.load_chapter(state.chapter_num, get_font());
+    chapter.pages_offset =  state.index < chapter.pages.size() ? state.index : 0;
+    return chapter;
+}
+
 TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size)
 {
     TextBox tb(
@@ -160,4 +189,8 @@ TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bo
 const GFXfont* Book::get_font() const
 {
     return &hebEng5x7avia;
+}
+
+void Book::handle_next_chapter()
+{
 }

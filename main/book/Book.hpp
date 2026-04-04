@@ -17,30 +17,39 @@ public:
 public:
     void read_page();
     void prev_page();
-
-public:
-    void display_title();
-    void no_more_pages();
-    void reset_book();
     
 public:
     bool has_next_page() const;
     bool has_prev_page() const;
 
+public:
+    void display_title();
+    void no_more_pages();
+    void reset_book();
+
 private:
     void display_chapter_title();
+    void display_page(TextBox& tb);
+    void display_header(TextBox& tb, const uint16_t y_border);
+
+private:
     std::string get_title() const;
     std::string get_author() const;
     void draw_cover(const uint16_t x, const uint16_t y);
     const GFXfont* get_font() const;
+    void handle_next_chapter();
+    void handle_prev_chapter();
+    
+private:
+    Chapter initialize_chapter();
     
 private:
     TextBox make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size);
 
 private:
     PageManager _page_manager;
-    Chapter _current_chapter;
     std::stack<size_t> _page_indexs;
+    Chapter _current_chapter;
     
 private:
     std::shared_ptr<Display> _display;
