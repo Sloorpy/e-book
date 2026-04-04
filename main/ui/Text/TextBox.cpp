@@ -101,35 +101,6 @@ int16_t TextBox::width() const
     return _right - _left;
 }
 
-size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center) {
-    if (_font == nullptr) {
-        return 0;
-    }
-
-    const GFXfont* old_font = _display->getFont();
-    _display->setFont(_font);
-
-    BookString bs(str);
-    const size_t original_len = str.size();
-
-    while (!bs.end() && !bottom_reached()) {
-        const Line line = bs.next_line(*this);
-
-        if (line.empty()) {
-            continue;
-        }
-
-        if (center) {
-            center_cursor(line);
-        }
-
-        write_line(line);
-        next_line();
-    }
-
-    _display->setFont(old_font);
-    return original_len - bs.remaining_bytes();
-}
 
 void TextBox::write_word(const Word& word)
 {
@@ -172,15 +143,16 @@ void TextBox::next_line()
     _cursor.x = line_start_x();
 }
 
-size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
-{
+size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center) {
     if (_font == nullptr) {
         return 0;
     }
-    const size_t original_len = str.size();
-    const Vector2 original_cursor = _cursor;
+
+    const GFXfont* old_font = _display->getFont();
+    _display->setFont(_font);
 
     BookString bs(str);
+    const size_t original_len = str.size();
 
     while (!bs.end() && !bottom_reached()) {
         const Line line = bs.next_line(*this);
@@ -189,23 +161,47 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str)
             continue;
         }
 
-        const Word& last_word = line.back();
-        for (const Word& word : line) {
-            const int16_t word_width = static_cast<int16_t>(word.calc_word_width(_font, _textsize));
-            _cursor.x -= word_width;
-
-            if (&word != &last_word) {
-                _cursor.x -= TextHelper::space_width(*this);
-
-                if (_cursor.x < _left) {
-                    break;
-                }
-            }
+        if (center) {
+            center_cursor(line);
         }
 
+        write_line(line);
+        next_line();
+    }
+
+    _display->setFont(old_font);
+    return original_len - bs.remaining_bytes();
+}
+
+size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const bool center)
+{
+    if (_font == nullptr) {
+        return 0;
+    }
+    const GFXfont* old_font = _display->getFont();
+    _display->setFont(_font);
+
+    const size_t original_len = str.size();
+    const Vector2 original_cursor = _cursor;
+
+    BookString bs(str);
+
+    while (!bs.end() && !bottom_reached()) {
+                const Line line = bs.next_line(*this);
+
+        if (line.empty()) {
+            continue;
+        }
+
+        if (center) {
+            center_cursor(line);
+        }
+
+        write_line(line);
         next_line();
     }
 
     _cursor = original_cursor;
+    _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
 }

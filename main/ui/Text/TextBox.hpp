@@ -30,7 +30,7 @@ public:
 
 public:
     size_t print_hebrew(const std::vector<uint8_t>& str, const bool center=false);
-    size_t next_print_size(const std::vector<uint8_t>& str);
+    size_t next_print_size(const std::vector<uint8_t>& str, const bool center=false);
     void next_line();
 
 public:
