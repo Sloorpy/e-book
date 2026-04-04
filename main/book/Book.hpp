@@ -33,17 +33,19 @@ public:
 private:
     void render_current_view();
     void render_and_save();
+
+private:
     void display_title();
-    void no_more_pages();
-    size_t print_page_size(const std::vector<uint8_t> &text);
-    size_t print_current_page();
-
-private:
     void display_chapter_title();
+    void display_current_page();
     void display_header();
-    void load_chapter_save();
+    void no_more_pages();
 
 private:
+    size_t print_page_size(const std::vector<uint8_t> &text);
+
+private:
+    void load_chapter_save();
     void first_chapter_title();
     void load_all_pages();
     void prev_chapter_last_page();

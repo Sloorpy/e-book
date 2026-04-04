@@ -41,7 +41,7 @@ void Book::render_current_view()
             no_more_pages();
             break;
         case BookViewState::PAGE:
-            print_current_page();
+            display_current_page();
             display_header();    
             break;
     }
@@ -89,7 +89,7 @@ size_t Book::print_page_size(const std::vector<uint8_t>& text)
     return make_page_text_box().next_print_size(text);
 }
 
-size_t Book::print_current_page()
+void Book::display_current_page()
 {
     if (_current_chapter.page_indicies.empty()) {
         throw std::runtime_error("No current page found. Can't load page");
@@ -99,7 +99,8 @@ size_t Book::print_current_page()
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().start,
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
     );
-    return make_page_text_box().print_hebrew(curr_text);
+    
+    make_page_text_box().print_hebrew(curr_text);
 }
 
 void Book::reset_book()
