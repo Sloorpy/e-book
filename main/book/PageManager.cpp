@@ -16,7 +16,7 @@ PageManager::PageManager(const std::string_view &book_name) :
 
 std::string PageManager::get_title() const
 {
-    const std::string data = File(book_file_path("cover")).read_all();
+    const std::string data = File(book_file_path("cover"), "r").read_all();
     size_t index = data.find('\n');
 
     if (index == std::string::npos)
@@ -29,7 +29,7 @@ std::string PageManager::get_title() const
 
 std::string PageManager::get_author() const
 {
-    const std::string data = File(book_file_path("cover")).read_all();
+    const std::string data = File(book_file_path("cover"), "r").read_all();
     size_t index = data.find('\n');
 
     if (index == std::string::npos)
@@ -42,7 +42,7 @@ std::string PageManager::get_author() const
 
 std::string PageManager::get_chapter_title(const uint16_t chapter_num) const
 {
-    return File(chapter_file_path(chapter_num, "chapter")).read_all();
+    return File(chapter_file_path(chapter_num, "chapter"), "r").read_all();
 }
 
 uint16_t PageManager::chapter_count() const
@@ -52,7 +52,7 @@ uint16_t PageManager::chapter_count() const
     }
 
     const std::string chapter_count_path = book_file_path("chapter_count");
-    const std::string chapter_count = File(chapter_count_path).read_all();
+    const std::string chapter_count = File(chapter_count_path, "r").read_all();
 
     int num = 0;
     try {
@@ -75,7 +75,7 @@ uint16_t PageManager::chapter_count() const
 StateInfo PageManager::load_state(const uint16_t state_num)
 {
     const std::string path = book_file_path("state_" + std::to_string(state_num));
-    const std::string data = File(path).read_all();
+    const std::string data = File(path, "r").read_all();
     const size_t split_offset = data.find_first_of('\n'); 
     const std::string chapter_num_str = data.substr(0, split_offset);
     const std::string index_str = data.substr(split_offset + 1);
@@ -88,6 +88,13 @@ StateInfo PageManager::load_state(const uint16_t state_num)
         chapter_val,
         index
     };
+}
+
+void PageManager::save_state(const StateInfo state, const uint16_t state_num)
+{
+    const std::string state_path = book_file_path("state_" + std::to_string(state_num));
+    const std::string data = std::to_string(state.chapter_num) + '\n' + std::to_string(state.index);
+    File(state_path, "w").write(data);
 }
 
 std::string PageManager::book_root_path() const
@@ -134,8 +141,8 @@ Chapter PageManager::load_chapter(const uint16_t chapter_num, const GFXfont* fon
 
     static constexpr size_t START_OFFSET = 0;
     return Chapter{
-        TextHelper::serialize_to_font_indices(File(pages_path).read_all_bytes(), font),
-        File(chapter_path).read_all(),
+        TextHelper::serialize_to_font_indices(File(pages_path, "r").read_all_bytes(), font),
+        File(chapter_path, "r").read_all(),
         START_OFFSET,
         chapter_num
     };

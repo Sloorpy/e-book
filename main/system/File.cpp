@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <string>
 
-File::File(const std::string_view& filename) :  
-    _fd(open_file(filename)) 
+File::File(const std::string_view& filename, const std::string mode) :  
+    _fd(open_file(filename, mode)) 
 {}
 
 File::~File()
@@ -73,6 +73,26 @@ std::vector<uint8_t> File::read_bytes(const uint32_t size)
     return buffer;
 }
 
+void File::write(const std::string &txt)
+{
+    const size_t bytes_written = fwrite(txt.data(), sizeof(char), txt.size(), _fd);
+
+    if (bytes_written !=  txt.size())
+    {
+        ESP_LOGE(LOG_TAG.data(),
+                 "Failed to write file. Expected %zu bytes, wrote %zu bytes",
+                  txt.size(),
+                 bytes_written);
+        throw std::runtime_error("Failed to write full file");
+    }
+
+    if (fflush(_fd) != 0)
+    {
+        ESP_LOGE(LOG_TAG.data(), "Failed to flush file after write");
+        throw std::runtime_error("Failed to flush file");
+    }
+}
+
 void File::seek(size_t position) {
     int result = fseek(_fd, static_cast<long>(position), SEEK_SET);
     
@@ -83,10 +103,10 @@ void File::seek(size_t position) {
     }
 }
 
-FILE *File::open_file(const std::string_view &filename)
+FILE *File::open_file(const std::string_view &filename, const std::string mode)
 {
     const std::string file_path = std::string(SDManager::instance().get_base_path()) + "/" + std::string(filename);
-    FILE* fd = fopen(file_path.c_str(), "rb");
+    FILE* fd = fopen(file_path.c_str(), mode.c_str());
     
     if (!fd) 
     {

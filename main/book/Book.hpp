@@ -45,6 +45,7 @@ private:
     
 private:
     TextBox make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size);
+    StateInfo current_state() const;
 
 private:
     PageManager _page_manager;

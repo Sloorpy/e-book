@@ -38,6 +38,8 @@ void Book::display_title()
     
     static const Vector2 bitmap_position{(PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2, 150};
     draw_cover(bitmap_position.x, bitmap_position.y);
+
+    _page_manager.save_state(current_state());
 }
 
 void Book::no_more_pages()
@@ -75,6 +77,7 @@ void Book::read_page()
     TextBox text_tb = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
     TextBox header_tb = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
 
+    _page_manager.save_state(current_state());
     display_page(text_tb);
     display_header(header_tb, border_y);
 }
@@ -104,6 +107,8 @@ void Book::prev_page()
     _display->drawLine(0, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, PAGE_WIDTH, TEXT_POSITION.y - SPACE_BETWEEN_BORDER, 0);
     const std::vector<uint8_t> curr_text(_current_chapter.pages.begin() + _current_chapter.pages_offset, _current_chapter.pages.end());
 
+
+    _page_manager.save_state(current_state());
 }
 
 void Book::display_chapter_title()
@@ -138,7 +143,7 @@ void Book::display_page(TextBox& tb)
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
 {
-    std::vector<uint8_t> bitmap = File("books/percy_2_heb/cover.bin").read_all_bytes();
+    std::vector<uint8_t> bitmap = File("books/percy_2_heb/cover.bin", "rb").read_all_bytes();
     _display->drawRect(start_x, start_y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
     _display->drawBitmap(start_x, start_y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
 }
@@ -168,6 +173,11 @@ Chapter Book::initialize_chapter()
     Chapter chapter = _page_manager.load_chapter(state.chapter_num, get_font());
     chapter.pages_offset =  state.index < chapter.pages.size() ? state.index : 0;
     return chapter;
+}
+
+StateInfo Book::current_state() const
+{
+    return StateInfo{_current_chapter.num, _current_chapter.pages_offset};
 }
 
 TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size)

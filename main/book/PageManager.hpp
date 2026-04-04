@@ -33,6 +33,7 @@ public:
     Chapter load_chapter(const uint16_t chapter_num, const GFXfont* font);
     uint16_t chapter_count() const;
     StateInfo load_state(const uint16_t state_num=1);
+    void save_state(const StateInfo state, const uint16_t state_num=1);
 
 private:
     std::string book_root_path() const;
