@@ -3,6 +3,8 @@
 #include "Text/TextBox.hpp"
 #include "Fonts/hebEng5x7avia.h"
 #include "Display.hpp"
+
+#include <string_view>
 #include <esp_log.h>
 #include <esp_timer.h>
 #include <cstring>
@@ -74,8 +76,8 @@ void Book::no_more_pages()
 
     TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
     
-    const char* msg = "נגמרו העמודים :)";
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(msg, get_font()));
+    static constexpr std::string_view msg = "נגמרו העמודים :)";
+    text_box.print_hebrew(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
 }
 
 size_t Book::print_page()
