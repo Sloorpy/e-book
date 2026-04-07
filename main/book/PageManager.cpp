@@ -75,7 +75,17 @@ uint16_t PageManager::chapter_count() const
 StateInfo PageManager::load_state(const uint16_t state_num)
 {
     const std::string path = book_file_path("state_" + std::to_string(state_num));
-    const std::string data = File(path, "r").read_all();
+    std::string data;
+    try {
+        data = File(path, "r").read_all();
+    }
+    catch (...)
+    {
+        return StateInfo{
+        0,
+        0
+    }; 
+    }
     const size_t split_offset = data.find_first_of('\n'); 
     
     if (split_offset == std::string::npos) {
