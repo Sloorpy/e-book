@@ -108,7 +108,7 @@ void Book::reset_book()
 {
     _current_chapter = BASE_CHAPTER;
     _view_state = BookViewState::BOOK_TITLE;
-    render_and_save();
+    render_current_view();
 }
 
 void Book::first_chapter_title()
