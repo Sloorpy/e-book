@@ -15,10 +15,8 @@ static constexpr char TAG[] = "Book";
 static constexpr bool CENETER_TEXT = true;
 static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 
-static constexpr Vector2 TEXT_POSITION{0, 28};
+static constexpr Vector2 TEXT_POSITION{0, 20};
 static constexpr uint16_t TEXT_SIZE = 2;
-static constexpr int16_t SPACE_BETWEEN_BORDER = 10;
-static constexpr uint16_t BORDER_Y = TEXT_POSITION.y - SPACE_BETWEEN_BORDER;
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
     _page_manager(book_name),
@@ -225,14 +223,19 @@ void Book::display_chapter_title()
 
 void Book::display_header()
 {
-    _display->drawLine(0, BORDER_Y, PAGE_WIDTH, BORDER_Y, 0);
-    TextBox tb = make_header_text_box();
-
+    _display->drawLine(0, TEXT_POSITION.y, PAGE_WIDTH, TEXT_POSITION.y, 0);
+    const uint16_t part_width =  _display->width() / 5;
+    TextBox left_tb = make_header_text_box(TEXT_POSITION.x, part_width * 2);
+    TextBox middle_tb = make_header_text_box(TEXT_POSITION.x + part_width * 2, TEXT_POSITION.x + part_width * 3);
+    TextBox right_tb = make_header_text_box(TEXT_POSITION.x + part_width * 3, TEXT_POSITION.x + part_width * 5);
+    
     const uint32_t pages_read = (_current_chapter.num - 1) * _current_chapter.pages.size() +
                      (_current_chapter.page_indicies.empty() ? 0 : _current_chapter.page_indicies.top().end);
     const uint32_t finished_percentage = (pages_read * 100) / (_current_chapter.pages.size() * _page_manager.chapter_count());
     printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
-    tb.print("Chapter: " + std::to_string(_current_chapter.num) + "     |         " + std::to_string(finished_percentage) + "%");
+    left_tb.print("Chapter: " + std::to_string(_current_chapter.num));
+    middle_tb.print("|");
+    right_tb.print(std::to_string(finished_percentage) + "%");
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
@@ -289,18 +292,18 @@ void Book::load_chapter_save()
     build_page_indices(chapter_offset);
 }
 
-TextBox Book::make_header_text_box() const
+TextBox Book::make_header_text_box(const int16_t start_x, const int16_t end_x) const
 {
     TextBox tb(
         _display,
-        TEXT_POSITION.x,
-        FreeMonoBold9pt7b.yAdvance - 8,
-        PAGE_WIDTH, 
-        TEXT_POSITION.y, 
+        start_x,
+        0,
+        end_x, 
+        TEXT_POSITION.y + 5, 
+        &FreeMonoBold9pt7b,
         1,
         WritingDirection::LTR
     );
-    tb.setFont(&FreeMonoBold9pt7b);
 
     return tb;
 }
@@ -310,13 +313,13 @@ TextBox Book::make_page_text_box() const
      TextBox tb(
         _display,
         TEXT_POSITION.x,
-        TEXT_POSITION.y,
+        TEXT_POSITION.y - 8,
         PAGE_WIDTH, 
         PAGE_HEIGHT, 
+        get_font(),
         TEXT_SIZE,
         WritingDirection::RTL
     );
-    tb.setFont(get_font());
 
     return tb;
 }
@@ -328,7 +331,8 @@ TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bo
         left,
         top,
         right, 
-        bottom, 
+        bottom,                 
+        &FreeMonoBold9pt7b,
         text_size,
         WritingDirection::RTL
     );

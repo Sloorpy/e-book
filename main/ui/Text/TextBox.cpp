@@ -11,10 +11,11 @@ TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t top,
                  int16_t right,
                  int16_t bottom,
+                 const GFXfont* font,
                  uint16_t text_size,
                  WritingDirection dir) :
     _display(std::move(display)),
-    _font(&hebEng5x7avia),
+    _font(font),
     _left(left),
     _top(top),
     _right(right),
@@ -38,7 +39,7 @@ void TextBox::setCursor(int16_t x, int16_t y) {
 
 void TextBox::resetCursor() {
     _cursor.x = line_start_x();
-    _cursor.y = _top;
+    _cursor.y = _font ? _top + _font->yAdvance * _textsize: _top;
 }
 
 void TextBox::setFont(const GFXfont* font) {
@@ -89,7 +90,7 @@ void TextBox::center_cursor(const Line &line)
 
 bool TextBox::bottom_reached() const
 {
-    return _cursor.y + _font->yAdvance > _bottom;
+    return _cursor.y + _font->yAdvance * _textsize > _bottom;
 }
 
 int16_t TextBox::available_width() const {

@@ -15,8 +15,10 @@ public:
             int16_t top,
             int16_t right,
             int16_t bottom,
+            const GFXfont* font,
             uint16_t text_size = 1,
-            WritingDirection dir = WritingDirection::RTL);
+            WritingDirection dir = WritingDirection::RTL
+           );
 
 public:
     void setCursor(Vector2 pos);
