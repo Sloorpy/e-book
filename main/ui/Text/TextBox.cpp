@@ -37,7 +37,7 @@ void TextBox::setCursor(int16_t x, int16_t y) {
 
 void TextBox::resetCursor() {
     _cursor.x = line_start_x();
-    _cursor.y = _font ? _top + _font->yAdvance * _textsize: _top;
+    _cursor.y = _top;
 }
 
 void TextBox::setFont(const GFXfont* font) {

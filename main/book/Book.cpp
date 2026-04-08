@@ -14,7 +14,7 @@
 static constexpr char TAG[] = "Book";
 static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 
-static constexpr Vector2 TEXT_POSITION{0, 20};
+static constexpr Vector2 TEXT_POSITION{0, 18};
 static constexpr uint16_t TEXT_SIZE = 2;
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
@@ -39,8 +39,8 @@ void Book::render_current_view()
             no_more_pages();
             break;
         case BookViewState::PAGE:
-            display_current_page();
             display_header();    
+            display_current_page();
             break;
     }
 }
@@ -98,7 +98,7 @@ void Book::display_current_page()
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
     );
 
-    make_page_text_box().print(curr_text);
+    make_page_text_box().print(curr_text, InitialPosition::Right);
 }
 
 void Book::reset_book()
@@ -224,9 +224,9 @@ void Book::display_header()
 {
     _display->drawLine(0, TEXT_POSITION.y, PAGE_WIDTH, TEXT_POSITION.y, 0);
     const uint16_t part_width =  _display->width() / 5;
-    TextBox left_tb = make_header_text_box(TEXT_POSITION.x, part_width * 2);
-    TextBox middle_tb = make_header_text_box(TEXT_POSITION.x + part_width * 2, TEXT_POSITION.x + part_width * 3);
-    TextBox right_tb = make_header_text_box(TEXT_POSITION.x + part_width * 3, TEXT_POSITION.x + part_width * 5);
+    TextBox left_tb = make_header_text_box(0, part_width * 2);
+    TextBox middle_tb = make_header_text_box(part_width * 2, TEXT_POSITION.x + part_width * 3);
+    TextBox right_tb = make_header_text_box(part_width * 3, TEXT_POSITION.x + part_width * 5);
     
     const uint32_t pages_read = (_current_chapter.num - 1) * _current_chapter.pages.size() +
                      (_current_chapter.page_indicies.empty() ? 0 : _current_chapter.page_indicies.top().end);
@@ -298,21 +298,22 @@ TextBox Book::make_header_text_box(const int16_t start_x, const int16_t end_x) c
         _display,
         start_x,
         0,
-        end_x, 
-        TEXT_POSITION.y + 5, 
-        &FreeMonoBold9pt7b,
-        1
+        end_x,
+        TEXT_POSITION.y,
+        get_font(),
+        2
     );
 
     return tb;
 }
 
 TextBox Book::make_page_text_box() const
-{
+{   
+    static constexpr int16_t SPACE_FROM_BORDER = 7;
      TextBox tb(
         _display,
-        TEXT_POSITION.x,
-        TEXT_POSITION.y - 8,
+        0,
+        TEXT_POSITION.y + SPACE_FROM_BORDER,
         PAGE_WIDTH, 
         PAGE_HEIGHT, 
         get_font(),
@@ -330,10 +331,9 @@ TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bo
         top,
         right, 
         bottom,                 
-        &FreeMonoBold9pt7b,
+        get_font(),
         text_size
     );
-    tb.setFont(get_font());
 
     return tb;
 }
