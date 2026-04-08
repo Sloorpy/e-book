@@ -11,7 +11,6 @@ public:
     explicit BookString(const char* str);
 
     Word get_word();
-    void skip_word();
     Word next_word();
     Line next_line(const TextBox& tb);
     bool end() const;

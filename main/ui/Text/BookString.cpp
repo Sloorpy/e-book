@@ -74,16 +74,11 @@ Word BookString::get_word() {
     return Word{std::vector<uint8_t>(_str.begin() + _pos, _str.begin() + word_end)};
 }
 
-void BookString::skip_word() {
+Word BookString::next_word() {
     Word word = get_word();
     if (!word.bytes.empty()) {
         _pos += word.bytes.size();
     }
-}
-
-Word BookString::next_word() {
-    Word word = get_word();
-    skip_word();
     return word;
 }
 
@@ -100,6 +95,7 @@ Line BookString::next_line(const TextBox& tb) {
     }
 
     Line line;
+    Line reverse_words;
     int line_width = 0;
 
     while (!is_end()) {
@@ -109,19 +105,40 @@ Line BookString::next_line(const TextBox& tb) {
         }
 
         const int word_width = peek_word.calc_word_width(tb);
-        const int extra_space = line.empty() ? 0 : TextHelper::space_width(tb);
+        const bool has_words = !line.empty() || !reverse_words.empty();
+        const int extra_space = has_words ? TextHelper::space_width(tb) : 0;
         const int candidate_width = line_width + extra_space + word_width;
 
-        if (!line.empty() && candidate_width > tb.width()) {
+        if (has_words && candidate_width > tb.width()) {
             break;
         }
 
-        if (!line.empty()) {
+        if (has_words) {
             line_width += TextHelper::space_width(tb);
         }
-
-        line.push_back(next_word());
+        
+        switch(peek_word.word_type()) {
+            case WordType::HEBREW:
+                line.push_back(next_word());
+                break;
+            case WordType::ENGLISH:
+                reverse_words.push_back(next_word().reverse());
+                break;
+            case WordType::NUMERIC:
+                line.push_back(next_word().reverse());
+                break;
+            case WordType::SIGN:
+                line.push_back(next_word().reverse());
+                break;
+            default:
+                next_word();
+                break;
+        }
         line_width += word_width;
+    }
+
+    for (auto word = reverse_words.rbegin(); word != reverse_words.rend(); ++word) {
+        line.emplace_back(*word);
     }
 
     return line;
