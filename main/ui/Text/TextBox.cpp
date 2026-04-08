@@ -117,10 +117,10 @@ void TextBox::write_line(const Line &line, InitialPosition pos)
 
     switch (pos) {
         case InitialPosition::Left:
-            _cursor.x = _left;
+            _cursor.x = _left + line_width;
             break;
         case InitialPosition::Center:
-            _cursor.x = _left + (width() - line_width) / 2;
+            _cursor.x = _right - (width() - line_width) / 2;
             break;
         case InitialPosition::Right:
             _cursor.x = _right;
