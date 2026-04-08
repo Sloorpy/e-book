@@ -40,7 +40,8 @@ public:
     uint16_t chapter_count() const;
     StateInfo load_state(const uint16_t state_num=1);
     void save_state(const StateInfo state, const uint16_t state_num=1);
-
+    std::vector<uint8_t> cover_bitmap();
+    
 private:
     std::string book_root_path() const;
     std::string book_file_path(const std::string_view& filename) const;
