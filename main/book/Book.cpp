@@ -241,6 +241,10 @@ void Book::display_header()
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
 {
     std::vector<uint8_t> bitmap = _page_manager.cover_bitmap();
+    if (bitmap.empty()) {
+        return;
+    }
+    
     _display->drawRect(start_x, start_y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
     _display->drawBitmap(start_x, start_y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
 }

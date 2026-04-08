@@ -115,7 +115,12 @@ void PageManager::save_state(const StateInfo state, const uint16_t state_num)
 std::vector<uint8_t> PageManager::cover_bitmap()
 {
     const std::string cover_bin_path = book_file_path("cover.bin");
-    return File(cover_bin_path, "rb").read_all_bytes();
+    try {
+        return File(cover_bin_path, "rb").read_all_bytes();
+    }
+    catch (...) {
+        return {};
+    }
 }
 
 std::string PageManager::book_root_path() const
