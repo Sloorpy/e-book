@@ -8,7 +8,27 @@ bool TextHelper::is_hebrew_utf8_prefix(uint8_t byte) {
 
 bool TextHelper::is_hebrew_char(const uint8_t byte)
 {
-    return byte >= TextConstants::HEBREW_START && byte <= TextConstants::HEBREW_END;
+    return is_hebrew_utf8_prefix(byte) ||
+           (byte >= TextConstants::HEBREW_START && byte <= TextConstants::HEBREW_END);
+}
+
+bool TextHelper::is_english_char(const uint8_t byte)
+{
+    return (byte >= 'A' && byte <= 'Z') ||
+           (byte >= 'a' && byte <= 'z');
+}
+
+bool TextHelper::is_numeric_char(const uint8_t byte)
+{
+    return byte >= TextConstants::NUMERIC_START && byte <= TextConstants::NUMERIC_END;
+}
+
+bool TextHelper::is_sign_char(uint8_t byte)
+{
+    return (byte >= '!' && byte <= '/')  ||
+           (byte >= ':' && byte <= '@')  ||
+           (byte >= '[' && byte <= '`')  ||
+           (byte >= '{' && byte <= '~');
 }
 
 size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {

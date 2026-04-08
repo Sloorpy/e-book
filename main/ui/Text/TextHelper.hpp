@@ -9,9 +9,13 @@
 
 namespace TextConstants {
     constexpr uint8_t HEBREW_UTF8_PREFIX = 0xD7;
+    constexpr uint8_t FONT_DIFF = 0x10;
+
     constexpr uint8_t HEBREW_START = 0x80;
     constexpr uint8_t HEBREW_END = 0x9A;
-    constexpr uint8_t FONT_DIFF = 0x10;
+
+    constexpr uint8_t NUMERIC_START = 0x21;
+    constexpr uint8_t NUMERIC_END = 0x7E;
 }
 
 enum class WritingDirection { RTL, LTR };
@@ -22,6 +26,9 @@ class TextHelper {
 public:
     static bool is_hebrew_utf8_prefix(uint8_t byte);
     static bool is_hebrew_char(const uint8_t byte);
+    static bool is_english_char(const uint8_t byte);
+    static bool is_numeric_char(const uint8_t byte);
+    static bool is_sign_char(uint8_t byte);
 
 public:
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);
