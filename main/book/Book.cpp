@@ -12,7 +12,6 @@
 #include <algorithm>
 
 static constexpr char TAG[] = "Book";
-static constexpr bool CENETER_TEXT = true;
 static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 
 static constexpr Vector2 TEXT_POSITION{0, 20};
@@ -65,8 +64,8 @@ void Book::display_title()
     TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);
     TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
 
-    title_tb.print_hebrew(TextHelper::serialize_to_font_indices(title, get_font()), CENETER_TEXT);
-    author_tb.print_hebrew(TextHelper::serialize_to_font_indices(author, get_font()));
+    title_tb.print(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
+    author_tb.print(TextHelper::serialize_to_font_indices(author, get_font()));
     
     static const Vector2 bitmap_position{(PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2, 150};
     draw_cover(bitmap_position.x, bitmap_position.y);
@@ -80,7 +79,7 @@ void Book::no_more_pages()
     TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
     
     static constexpr std::string_view msg = "נגמרו העמודים :)";
-    text_box.print_hebrew(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
+    text_box.print(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
 }
 
 size_t Book::print_page_size(const std::vector<uint8_t>& text)
@@ -99,7 +98,7 @@ void Book::display_current_page()
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
     );
 
-    make_page_text_box().print_hebrew(curr_text);
+    make_page_text_box().print(curr_text);
 }
 
 void Book::reset_book()
@@ -217,8 +216,8 @@ void Book::display_chapter_title()
     TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
     TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);    
 
-    number_tb.print_hebrew(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), CENETER_TEXT);
-    title_tb.print_hebrew(TextHelper::serialize_to_font_indices(chapter_title, get_font()), CENETER_TEXT);
+    number_tb.print(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center);
+    title_tb.print(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center);
 }
 
 void Book::display_header()
@@ -233,9 +232,10 @@ void Book::display_header()
                      (_current_chapter.page_indicies.empty() ? 0 : _current_chapter.page_indicies.top().end);
     const uint32_t finished_percentage = (pages_read * 100) / (_current_chapter.pages.size() * _page_manager.chapter_count());
     printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
-    left_tb.print("Chapter: " + std::to_string(_current_chapter.num));
-    middle_tb.print("|");
-    right_tb.print(std::to_string(finished_percentage) + "%");
+    
+    left_tb.print(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left);
+    middle_tb.print(TextHelper::serialize_to_font_indices("|", middle_tb.font()), InitialPosition::Center);
+    right_tb.print(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right);
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
@@ -301,8 +301,7 @@ TextBox Book::make_header_text_box(const int16_t start_x, const int16_t end_x) c
         end_x, 
         TEXT_POSITION.y + 5, 
         &FreeMonoBold9pt7b,
-        1,
-        WritingDirection::LTR
+        1
     );
 
     return tb;
@@ -317,8 +316,7 @@ TextBox Book::make_page_text_box() const
         PAGE_WIDTH, 
         PAGE_HEIGHT, 
         get_font(),
-        TEXT_SIZE,
-        WritingDirection::RTL
+        TEXT_SIZE
     );
 
     return tb;
@@ -333,8 +331,7 @@ TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bo
         right, 
         bottom,                 
         &FreeMonoBold9pt7b,
-        text_size,
-        WritingDirection::RTL
+        text_size
     );
     tb.setFont(get_font());
 

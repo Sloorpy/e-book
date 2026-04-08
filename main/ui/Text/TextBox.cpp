@@ -12,8 +12,7 @@ TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t right,
                  int16_t bottom,
                  const GFXfont* font,
-                 uint16_t text_size,
-                 WritingDirection dir) :
+                 uint16_t text_size) :
     _display(std::move(display)),
     _font(font),
     _left(left),
@@ -22,8 +21,7 @@ TextBox::TextBox(std::shared_ptr<Display> display,
     _bottom(bottom),
     _cursor{0, 0},
     _textsize(text_size),
-    _text_color(static_cast<uint8_t>(Color::BLACK)),
-    _direction(dir) 
+    _text_color(static_cast<uint8_t>(Color::BLACK))
 {
     resetCursor();
 }
@@ -75,19 +73,6 @@ int16_t TextBox::line_height() const
             static_cast<int16_t>(_font->yAdvance);
 }
 
-void TextBox::center_cursor(const Line &line)
-{
-    const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
-    const int16_t side_padding = (width() - line_width) / 2;
-
-    if (_direction == WritingDirection::RTL) {
-        _cursor.x = line_start_x() - side_padding;
-    } 
-    else {
-        _cursor.x = line_start_x() + side_padding;
-    }
-}
-
 bool TextBox::bottom_reached() const
 {
     return _cursor.y + _font->yAdvance * _textsize > _bottom;
@@ -122,8 +107,26 @@ void TextBox::write_word(const Word& word)
     _cursor.x = pen_x;
 }
 
-void TextBox::write_line(const Line &line)
+void TextBox::write_line(const Line &line, InitialPosition pos)
 {
+    if (line.empty()) {
+        return;
+    }
+
+    const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
+
+    switch (pos) {
+        case InitialPosition::Left:
+            _cursor.x = _left;
+            break;
+        case InitialPosition::Center:
+            _cursor.x = _left + (width() - line_width) / 2;
+            break;
+        case InitialPosition::Right:
+            _cursor.x = _right;
+            break;
+    }
+
     const Word& last_word = line.back();
     for (const Word& word : line) {
         write_word(word);
@@ -138,13 +141,16 @@ void TextBox::write_line(const Line &line)
     }
 }
 
-void TextBox::next_line()
+void TextBox::next_line(InitialPosition pos, int16_t line_width)
 {
+    if (line_width == 0) {
+        return;
+    }
+
     _cursor.y += line_height();
-    _cursor.x = line_start_x();
 }
 
-size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center) {
+size_t TextBox::print(const std::vector<uint8_t>& str, const InitialPosition pos) {
     if (_font == nullptr) {
         return 0;
     }
@@ -157,24 +163,17 @@ size_t TextBox::print_hebrew(const std::vector<uint8_t>& str, const bool center)
 
     while (!bs.end() && !bottom_reached()) {
         const Line line = bs.next_line(*this);
+        const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
 
-        if (line.empty()) {
-            continue;
-        }
-
-        if (center) {
-            center_cursor(line);
-        }
-
-        write_line(line);
-        next_line();
+        write_line(line, pos);
+        next_line(pos, line_width);
     }
 
     _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
 }
 
-size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const bool center)
+size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPosition pos)
 {
     if (_font == nullptr) {
         return 0;
@@ -188,59 +187,13 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const bool cent
     BookString bs(str);
 
     while (!bs.end() && !bottom_reached()) {
-                const Line line = bs.next_line(*this);
+        const Line line = bs.next_line(*this);
+        const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
 
-        if (line.empty()) {
-            continue;
-        }
-
-        if (center) {
-            center_cursor(line);
-        }
-
-        next_line();
+        next_line(pos, line_width);
     }
 
     _cursor = original_cursor;
     _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
-}
-
-size_t TextBox::print(const std::string& str) {
-    const GFXfont* old_font = _display->getFont();
-    _display->setFont(_font);
-
-    size_t count = 0;
-    for (char ch : str) {
-        if (ch == '\n') {
-            _cursor.y += line_height();
-            _cursor.x = _left;
-            count++;
-            continue;
-        }
-
-        GFXglyph* glyph = TextHelper::get_char_font(ch, _font);
-        if (glyph == nullptr) {
-            count++;
-            continue;
-        }
-
-        int16_t char_width = static_cast<int16_t>(glyph->xAdvance) * static_cast<int16_t>(_textsize);
-
-        if (_cursor.x + char_width > _right) {
-            _cursor.y += line_height();
-            _cursor.x = _left;
-        }
-
-        if (_cursor.y + line_height() > _bottom) {
-            break;
-        }
-
-        _display->drawChar(_cursor.x, _cursor.y, ch, _text_color, static_cast<uint8_t>(Color::WHITE), _textsize);
-        _cursor.x += char_width;
-        count++;
-    }
-
-    _display->setFont(old_font);
-    return count;
 }

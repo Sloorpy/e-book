@@ -16,8 +16,7 @@ public:
             int16_t right,
             int16_t bottom,
             const GFXfont* font,
-            uint16_t text_size = 1,
-            WritingDirection dir = WritingDirection::RTL
+            uint16_t text_size = 1
            );
 
 public:
@@ -31,17 +30,16 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t print_hebrew(const std::vector<uint8_t>& str, const bool center=false);
-    size_t next_print_size(const std::vector<uint8_t>& str, const bool center=false);
-    size_t print(const std::string& str);
-    void next_line();
+    size_t print(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
+    size_t next_print_size(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
+    void next_line(InitialPosition pos = InitialPosition::Left, int16_t line_width = 0);
 
 public:
     std::shared_ptr<Display> display() { return _display; }
     const GFXfont* font() const { return _font; }
     uint8_t textSize() const { return _textsize; }
     int16_t left() const { return _left; }
-    int16_t line_start_x() const { return (_direction == WritingDirection::RTL) ? _right - 1 : _left; }
+    int16_t line_start_x() const { return _left; }
 
 public:
     int16_t available_width() const;
@@ -50,9 +48,8 @@ public:
 private:
     void draw_char(const Vector2 position, const char letter);
     void write_word(const Word& word);
-    void write_line(const Line& line);
+    void write_line(const Line& line, InitialPosition pos);
     int16_t line_height() const;
-    void center_cursor(const Line& line);
     bool bottom_reached() const;
 
 private:
@@ -69,5 +66,4 @@ private:
     Vector2 _cursor;
     uint8_t _textsize;
     uint8_t _text_color;
-    WritingDirection _direction;
 };
