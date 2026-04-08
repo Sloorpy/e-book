@@ -6,39 +6,9 @@ bool TextHelper::is_hebrew_utf8_prefix(uint8_t byte) {
     return byte == TextConstants::HEBREW_UTF8_PREFIX;
 }
 
-TextCharKind TextHelper::classify(const std::vector<uint8_t>& str, size_t index) {
-    if (index >= str.size()) {
-        return TextCharKind::Text;
-    }
-
-    const uint8_t ch = str[index];
-
-    if (ch == '\n') {
-        return TextCharKind::Newline;
-    }
-
-    if (is_hebrew_utf8_prefix(ch)) {
-        return TextCharKind::Hebrew;
-    }
-
-    return TextCharKind::Text;
-}
-
-uint8_t TextHelper::get_hebrew_font_char(const std::vector<uint8_t>& str) {
-    if (str.size() < 2) {
-        return 0;
-    }
-
-    const uint8_t ch = str[0];
-    if (!is_hebrew_utf8_prefix(ch)) {
-        return 0;
-    }
-
-    const uint16_t utf16 = (static_cast<uint16_t>(ch) << 8) | str[1];
-
-    return static_cast<uint8_t>(
-        utf16 - TextConstants::HEBREW_UTF16_BASE + TextConstants::FONT_OFFSET
-    );
+bool TextHelper::is_hebrew_char(const uint8_t byte)
+{
+    return byte >= TextConstants::HEBREW_START && byte <= TextConstants::HEBREW_END;
 }
 
 size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {
@@ -56,6 +26,10 @@ size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {
 
 uint16_t TextHelper::line_width(const Line &line, const TextBox &tb)
 {
+    if (line.empty()) {
+        return 0;
+    }
+
     uint16_t width = 0;
     for (const Word& word: line) {
         width += word.calc_word_width(tb);
