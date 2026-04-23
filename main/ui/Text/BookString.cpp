@@ -4,25 +4,47 @@
 #include <vector>
 #include <cstring>
 
+bool BookString::is_line_break(const uint8_t ch) {
+    return ch == '\n' || ch == '\r';
+}
+
+bool BookString::is_word_delimiter(const uint8_t ch) {
+    return ch == ' ' || is_line_break(ch);
+}
+
+bool BookString::is_ltr_joiner(const uint8_t ch) {
+    return ch == '\'' || ch == '@' || ch == '_' || ch == '-' || ch == '.' ||
+           ch == '/' || ch == '+' || ch == ':';
+}
+
+bool BookString::is_number_separator(const uint8_t ch) {
+    return ch == '.' || ch == ',';
+}
+
+bool BookString::is_sign_prefix_for_number(const std::vector<uint8_t>& str, const size_t pos) {
+    if (pos >= str.size()) {
+        return false;
+    }
+
+    if (str[pos] != '+' && str[pos] != '-') {
+        return false;
+    }
+
+    return pos + 1 < str.size() && TextHelper::is_numeric_char(str[pos + 1]);
+}
+
 BookString::BookString(const std::vector<uint8_t>& data)
-    : _str(data), _pos(0) 
+    : _str(data), _pos(0), _fallback_line_direction(WordType::LTR)
 {}
 
 BookString::BookString(const char* str)
-    : _str(reinterpret_cast<const uint8_t*>(str), reinterpret_cast<const uint8_t*>(str) + strlen(str)), _pos(0) {}
+    : _str(reinterpret_cast<const uint8_t*>(str), reinterpret_cast<const uint8_t*>(str) + strlen(str)),
+      _pos(0),
+      _fallback_line_direction(WordType::LTR)
+{}
 
 bool BookString::is_char_at(const size_t pos, const char c) const {
     return pos < _str.size() && static_cast<char>(_str[pos]) == c;
-}
-
-size_t BookString::find_delimiter(const size_t start) const {
-    for (size_t i = start; i < _str.size(); ++i) {
-        char c = static_cast<char>(_str[i]);
-        if (c == ' ' || c == '\n' || c == '\r') {
-            return i;
-        }
-    }
-    return _str.size();
 }
 
 void BookString::skip_spaces() {
@@ -41,14 +63,6 @@ void BookString::skip_newline() {
     } else {
         ++_pos;
     }
-}
-
-size_t BookString::next_hebrew_word_size() const {
-    if (_pos >= _str.size()) {
-        return 0;
-    }
-    size_t word_end = find_delimiter(_pos);
-    return TextHelper::count_hebrew_chars(std::vector<uint8_t>(_str.begin() + _pos, _str.begin() + word_end));
 }
 
 bool BookString::is_end() const
@@ -70,15 +84,117 @@ Word BookString::get_word() {
         return {};
     }
 
-    size_t word_end = find_delimiter(_pos);
+    const size_t word_end = consume_token_end(_pos);
+
     return Word{std::vector<uint8_t>(_str.begin() + _pos, _str.begin() + word_end)};
+}
+
+size_t BookString::consume_token_end(const size_t start) const {
+    if (start >= _str.size() || is_word_delimiter(_str[start])) {
+        return start;
+    }
+
+    if (TextHelper::is_hebrew_char(_str[start])) {
+        return consume_hebrew_run(start);
+    }
+
+    if (TextHelper::is_english_char(_str[start])) {
+        return consume_ltr_run(start);
+    }
+
+    if (TextHelper::is_numeric_char(_str[start]) || is_sign_prefix_for_number(_str, start)) {
+        return consume_number_run(start);
+    }
+
+    if (TextHelper::is_sign_char(_str[start])) {
+        return consume_neutral_run(start);
+    }
+
+    size_t i = start + 1;
+    while (i < _str.size() && !is_word_delimiter(_str[i])) {
+        ++i;
+    }
+    return i;
+}
+
+size_t BookString::consume_hebrew_run(const size_t start) const {
+    size_t i = start;
+
+    while (i < _str.size() && !is_word_delimiter(_str[i])) {
+        if (!TextHelper::is_hebrew_char(_str[i])) {
+            break;
+        }
+
+        ++i;
+    }
+
+    return i;
+}
+
+size_t BookString::consume_ltr_run(const size_t start) const {
+    size_t i = start;
+
+    while (i < _str.size() && !is_word_delimiter(_str[i])) {
+        if (TextHelper::is_english_char(_str[i]) || TextHelper::is_numeric_char(_str[i])) {
+            ++i;
+            continue;
+        }
+
+        if (is_ltr_joiner(_str[i]) && i + 1 < _str.size() &&
+            (TextHelper::is_english_char(_str[i + 1]) || TextHelper::is_numeric_char(_str[i + 1]))) {
+            ++i;
+            continue;
+        }
+
+        break;
+    }
+
+    return i;
+}
+
+size_t BookString::consume_number_run(const size_t start) const {
+    size_t i = start;
+
+    if (is_sign_prefix_for_number(_str, i)) {
+        ++i;
+    }
+
+    while (i < _str.size() && !is_word_delimiter(_str[i])) {
+        if (TextHelper::is_numeric_char(_str[i])) {
+            ++i;
+            continue;
+        }
+
+        const bool has_prev_digit = i > start && TextHelper::is_numeric_char(_str[i - 1]);
+        const bool has_next_digit = i + 1 < _str.size() && TextHelper::is_numeric_char(_str[i + 1]);
+        if (is_number_separator(_str[i]) && has_prev_digit && has_next_digit) {
+            ++i;
+            continue;
+        }
+
+        break;
+    }
+
+    return i;
+}
+
+size_t BookString::consume_neutral_run(const size_t start) const {
+    size_t i = start;
+    while (i < _str.size() && TextHelper::is_sign_char(_str[i]) && !is_sign_prefix_for_number(_str, i)) {
+        ++i;
+    }
+
+    return i;
 }
 
 Word BookString::next_word() {
     Word word = get_word();
-    if (!word.bytes.empty()) {
-        _pos += word.bytes.size();
+    const std::vector<uint8_t> bytes = word.get();
+
+    if (!bytes.empty()) {
+        _pos += bytes.size();
     }
+
     return word;
 }
 
@@ -97,11 +213,25 @@ Line BookString::next_line(const TextBox& tb) {
     Line line;
     Line reverse_words;
     int line_width = 0;
+    WordType line_direction = WordType::NEUTRAL;
+
+    auto active_line_direction = [&]() {
+        if (line_direction == WordType::RTL || line_direction == WordType::LTR) {
+            return line_direction;
+        }
+
+        return _fallback_line_direction;
+    };
 
     while (!is_end()) {
         Word peek_word = get_word();
-        if (peek_word.bytes.empty()) {
+        if (peek_word.get().empty()) {
             break;
+        }
+
+        if (line_direction == WordType::NEUTRAL &&
+            (peek_word.type() == WordType::RTL || peek_word.type() == WordType::LTR)) {
+            line_direction = peek_word.type();
         }
 
         const int word_width = peek_word.calc_word_width(tb);
@@ -117,24 +247,33 @@ Line BookString::next_line(const TextBox& tb) {
             line_width += TextHelper::space_width(tb);
         }
         
-        switch(peek_word.word_type()) {
-            case WordType::HEBREW:
+        switch(peek_word.type()) {
+            case WordType::RTL:
+                if (active_line_direction() == WordType::LTR) {
+                    reverse_words.push_back(next_word());
+                } else {
+                    line.push_back(next_word());
+                }
+                break;
+            case WordType::LTR:
+                if (active_line_direction() == WordType::RTL) {
+                    reverse_words.push_back(next_word());
+                } else {
+                    line.push_back(next_word());
+                }
+                break;
+            case WordType::NUMBER:
                 line.push_back(next_word());
                 break;
-            case WordType::ENGLISH:
-                reverse_words.push_back(next_word().reverse());
-                break;
-            case WordType::NUMERIC:
-                line.push_back(next_word().reverse());
-                break;
-            case WordType::SIGN:
-                line.push_back(next_word().reverse());
-                break;
-            default:
-                next_word();
+            case WordType::NEUTRAL:
+                line.push_back(next_word());
                 break;
         }
         line_width += word_width;
+    }
+
+    if (line_direction == WordType::RTL || line_direction == WordType::LTR) {
+        _fallback_line_direction = line_direction;
     }
 
     for (auto word = reverse_words.rbegin(); word != reverse_words.rend(); ++word) {

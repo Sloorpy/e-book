@@ -1,36 +1,60 @@
 #include "Word.hpp"
 #include "TextBox.hpp"
 #include "TextHelper.hpp"
+#include <algorithm>
 #include <vector>
 
-WordType Word::word_type() const
+Word::Word(const std::vector<uint8_t>& bytes) :
+    _bytes(bytes),
+    _type(word_type(bytes))
+{
+    if (_type == WordType::LTR || _type == WordType::NUMBER) {
+        std::reverse(_bytes.begin(), _bytes.end());
+    }
+}
+
+WordType Word::word_type(const std::vector<uint8_t>& bytes) const
 {
     if (bytes.empty()) {
-        return WordType::EMPTY;
+        return WordType::NEUTRAL;
     }
 
-    size_t i = 0;
-    while (i < bytes.size() && TextHelper::is_sign_char(bytes[i])) {
-        ++i;
+    bool has_rtl = false;
+    bool has_ltr = false;
+    bool has_number = false;
+
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        const uint8_t ch = bytes[i];
+
+        if (TextHelper::is_hebrew_char(ch)) {
+            has_rtl = true;
+            continue;
+        }
+
+        if (TextHelper::is_english_char(ch)) {
+            has_ltr = true;
+            continue;
+        }
+
+        if (TextHelper::is_numeric_char(ch)) {
+            has_number = true;
+            continue;
+        }
     }
 
-    if (i >= bytes.size()) {
-        return WordType::SIGN;
+    if (has_rtl && !has_ltr) {
+        return WordType::RTL;
     }
 
-    if (TextHelper::is_hebrew_char(bytes[i])) {
-        return WordType::HEBREW;
+    if (has_ltr && !has_rtl) {
+        return WordType::LTR;
     }
 
-    if (TextHelper::is_english_char(bytes[i])) {
-        return WordType::ENGLISH;
+    if (has_number && !has_ltr && !has_rtl) {
+        return WordType::NUMBER;
     }
 
-    if (TextHelper::is_numeric_char(bytes[i])) {
-        return WordType::NUMERIC;
-    }
-
-    return WordType::EMPTY;
+    return WordType::NEUTRAL;
 }
 
 int Word::calc_word_width(const TextBox &tb) const
@@ -41,8 +65,8 @@ int Word::calc_word_width(const TextBox &tb) const
 int Word::calc_word_width(const GFXfont* font, uint8_t textsize) const {
     int width = 0;
 
-    for (size_t i = 0; i < bytes.size(); ++i) {
-        GFXglyph* glyph = TextHelper::get_char_font(bytes[i], font);
+    for (size_t i = 0; i < _bytes.size(); ++i) {
+        GFXglyph* glyph = TextHelper::get_char_font(_bytes[i], font);
         if (glyph) {
             width += glyph->xAdvance * textsize;
         }
@@ -50,8 +74,12 @@ int Word::calc_word_width(const GFXfont* font, uint8_t textsize) const {
     return width;
 }
 
-Word Word::reverse()
+std::vector<uint8_t> Word::get() const
 {
-    std::reverse(bytes.begin(), bytes.end());
-    return *this;
+    return _bytes;
+}
+
+WordType Word::type() const
+{
+    return _type;
 }
