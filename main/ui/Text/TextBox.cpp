@@ -75,7 +75,7 @@ int16_t TextBox::line_height() const
 
 bool TextBox::bottom_reached() const
 {
-    return _cursor.y + _font->yAdvance * _textsize > _bottom;
+    return _cursor.y > _bottom;
 }
 
 int16_t TextBox::available_width() const {
