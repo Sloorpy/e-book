@@ -40,6 +40,6 @@ private:
     static constexpr std::string_view LOG_TAG = "SDManger";
 
 private:
-    static constexpr gpio_num_t PIN_SD_CS   = GPIO_NUM_27;
+    static constexpr gpio_num_t PIN_SD_CS = GPIO_NUM_21;
     static SDManager* _instance;
 };

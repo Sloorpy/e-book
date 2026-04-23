@@ -32,7 +32,7 @@ extern "C" void app_main(void)
         current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(g_spi));
         current_state->main();
         
-        Button button(GPIO_NUM_32);
+        Button button(GPIO_NUM_22);
         ESP_ERROR_CHECK(button.init());
         
         static const char* TAG = "Button";
