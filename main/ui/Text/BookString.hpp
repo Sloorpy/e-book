@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 #include "Word.hpp"
 
@@ -17,6 +18,8 @@ public:
     size_t remaining_bytes() const;
 
 private:
+    static bool is_line_break(uint8_t ch);
+    static bool is_word_delimiter(uint8_t ch);
     void skip_spaces();
     void skip_newline();
     size_t next_hebrew_word_size() const;

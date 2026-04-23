@@ -7,19 +7,29 @@
 class TextBox;
 
 enum class WordType : uint8_t {
-    ENGLISH,
-    HEBREW,
-    NUMERIC,
-    SIGN,
-    EMPTY
+    RTL,
+    LTR,
+    NUMBER,
+    NEUTRAL
 };
 
-struct Word {
-    std::vector<uint8_t> bytes;
-    WordType word_type() const;
+class Word final {
+public:
+    explicit Word(const std::vector<uint8_t>& bytes = {});
+    ~Word() = default;
+
+public:
     int calc_word_width(const TextBox& tb) const;
     int calc_word_width(const GFXfont* font, uint8_t textsize) const;
-    Word reverse();
+    std::vector<uint8_t> get() const;
+    WordType type() const;
+
+private:
+    WordType word_type(const std::vector<uint8_t>& bytes) const;
+
+private:
+    std::vector<uint8_t> _bytes;
+    WordType _type;
 };
 
 using Line = std::vector<Word>;

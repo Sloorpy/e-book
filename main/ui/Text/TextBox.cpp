@@ -91,8 +91,9 @@ int16_t TextBox::width() const
 void TextBox::write_word(const Word& word)
 {
     int16_t pen_x = _cursor.x;
+    const std::vector<uint8_t> bytes = word.get();
 
-    for (uint8_t ch : word.bytes) {
+    for (uint8_t ch : bytes) {
         const GFXglyph* const glyph = TextHelper::get_char_font(ch, _font);
         if (glyph == nullptr) {
             continue;
