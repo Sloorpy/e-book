@@ -5,6 +5,8 @@
 #include "Book.hpp"
 #include "Display.hpp"
 #include "states/BookState.hpp"
+#include "Text/TextBox.hpp"
+#include "Text/TextHelper.hpp"
 #include <Fonts/hebEng5x7avia.h>
 
 #include <string_view>
@@ -15,6 +17,27 @@
 
 static constexpr std::string_view MAIN_TAG = "Main";
 static constexpr std::string_view BOOK_NAME = "percy_2_heb";
+static constexpr std::string_view BIDI_TEST_FILE = "bidi_print_test.txt";
+
+static void print_bidi_test_file(const std::shared_ptr<Display>& display)
+{
+    File file(BIDI_TEST_FILE, "r");
+    const std::string raw_text = file.read_all();
+    const std::vector<uint8_t> font_bytes = TextHelper::serialize_to_font_indices(raw_text, &hebEng5x7avia);
+
+    display->fill_screen(Color::WHITE);
+
+    TextBox tb(display,
+               4,
+               4,
+               396,
+               296,
+               &hebEng5x7avia,
+               1);
+
+    tb.print(font_bytes, InitialPosition::Right);
+    display->update();
+}
 
 std::shared_ptr<SPI> g_spi = nullptr;
 
@@ -30,6 +53,10 @@ extern "C" void app_main(void)
 
         std::unique_ptr<ProgramState> current_state = nullptr;
         current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(g_spi));
+
+        print_bidi_test_file(current_state->get_display());
+        vTaskDelay(pdMS_TO_TICKS(3000));
+
         current_state->main();
         
         Button button(GPIO_NUM_32);

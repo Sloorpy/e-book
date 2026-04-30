@@ -1,0 +1,19 @@
+שלום עולם
+Hello world!
+שלום Hello
+Hello שלום
+שלום,Hello
+Hello,שלום
+abc-שלום-def
+שלום-abc-עולם
+12345
+-42 +17 3.1415 1,234,567
+מחיר: 12.5% הנחה
+price: $12.50 (today)
+שלום (Hello) עולם
+Hello (שלום) world
+"שלום" 'Hello' [123] {abc}
+email: test@example.com
+path: /sdcard/books/file.txt
+mix123שלום456test
+!?.,:; -+=_/\\|~
