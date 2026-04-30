@@ -51,6 +51,9 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
 {
     static constexpr uint8_t MOUNT_RETRY_COUNT = 3;
     static constexpr uint32_t RETRY_DELAY_MS = 250;
+    static constexpr gpio_num_t PIN_SD_MOSI = GPIO_NUM_23;
+    static constexpr gpio_num_t PIN_SD_MISO = GPIO_NUM_19;
+    static constexpr gpio_num_t PIN_SD_CLK = GPIO_NUM_18;
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = false,
@@ -59,10 +62,19 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
     };
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+    host.max_freq_khz = SDMMC_FREQ_PROBING;
+
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
     host.slot = static_cast<int>(spi->get_host());
     slot_config.gpio_cs = PIN_SD_CS;
     slot_config.host_id = static_cast<spi_host_device_t>(host.slot);
+
+    gpio_set_pull_mode(PIN_SD_CS, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(PIN_SD_MOSI, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(PIN_SD_MISO, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(PIN_SD_CLK, GPIO_PULLUP_ONLY);
+
+    ESP_LOGI(LOG_TAG.data(), "SD mount setup host=%d freq=%dKHz cs=%d", host.slot, host.max_freq_khz, PIN_SD_CS);
 
     sdmmc_card_t *card = nullptr;
 
