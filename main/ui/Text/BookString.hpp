@@ -23,8 +23,10 @@ private:
     static bool is_ltr_joiner(uint8_t ch);
     static bool is_number_separator(uint8_t ch);
     static bool is_sign_prefix_for_number(const std::vector<uint8_t>& str, size_t pos);
+    static WordType strong_type_for_byte(uint8_t ch);
 
     size_t consume_token_end(size_t start) const;
+    size_t split_mixed_strong_run_end(size_t start, size_t end) const;
     size_t consume_hebrew_run(size_t start) const;
     size_t consume_ltr_run(size_t start) const;
     size_t consume_number_run(size_t start) const;

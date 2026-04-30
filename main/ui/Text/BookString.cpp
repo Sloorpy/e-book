@@ -33,6 +33,18 @@ bool BookString::is_sign_prefix_for_number(const std::vector<uint8_t>& str, cons
     return pos + 1 < str.size() && TextHelper::is_numeric_char(str[pos + 1]);
 }
 
+WordType BookString::strong_type_for_byte(const uint8_t ch) {
+    if (TextHelper::is_hebrew_char(ch)) {
+        return WordType::RTL;
+    }
+
+    if (TextHelper::is_english_char(ch)) {
+        return WordType::LTR;
+    }
+
+    return WordType::NEUTRAL;
+}
+
 BookString::BookString(const std::vector<uint8_t>& data)
     : _str(data), _pos(0), _fallback_line_direction(WordType::LTR)
 {}
@@ -84,9 +96,37 @@ Word BookString::get_word() {
         return {};
     }
 
-    const size_t word_end = consume_token_end(_pos);
+    const size_t token_end = consume_token_end(_pos);
+    const size_t word_end = split_mixed_strong_run_end(_pos, token_end);
 
     return Word{std::vector<uint8_t>(_str.begin() + _pos, _str.begin() + word_end)};
+}
+
+size_t BookString::split_mixed_strong_run_end(const size_t start, const size_t end) const {
+    if (start >= end || end > _str.size()) {
+        return end;
+    }
+
+    WordType active_strong_type = WordType::NEUTRAL;
+
+    for (size_t i = start; i < end; ++i) {
+        const WordType byte_type = strong_type_for_byte(_str[i]);
+
+        if (byte_type == WordType::NEUTRAL) {
+            continue;
+        }
+
+        if (active_strong_type == WordType::NEUTRAL) {
+            active_strong_type = byte_type;
+            continue;
+        }
+
+        if (byte_type != active_strong_type) {
+            return i;
+        }
+    }
+
+    return end;
 }
 
 size_t BookString::consume_token_end(const size_t start) const {
