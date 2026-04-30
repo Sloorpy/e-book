@@ -93,7 +93,7 @@ Word BookString::get_word() {
     skip_spaces();
 
     if (_pos >= _str.size() || is_char_at(_pos, '\n') || is_char_at(_pos, '\r')) {
-        return {};
+        return Word{};
     }
 
     const size_t token_end = consume_token_end(_pos);
