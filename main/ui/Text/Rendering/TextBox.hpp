@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Display.hpp"
-#include "Text/TextHelper.hpp"
-#include "Text/Word.hpp"
+#include "Text/Support/TextHelper.hpp"
+#include "Text/Legacy/Word.hpp"
 #include <cstdint>
 #include <memory>
 #include <string>

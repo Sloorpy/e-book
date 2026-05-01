@@ -1,6 +1,6 @@
-#include "TextBox.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
-#include "BookString.hpp"
+#include "Text/Legacy/BookString.hpp"
 #include <Fonts/hebEng5x7avia.h>
 #include <cstdint>
 #include <cstring>

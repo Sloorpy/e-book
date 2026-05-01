@@ -1,5 +1,5 @@
 #pragma once
-#include "Word.hpp"
+#include "Text/Legacy/Word.hpp"
 
 #include <cstdint>
 #include <cstddef>
@@ -17,8 +17,6 @@ namespace TextConstants {
     constexpr uint8_t NUMERIC_START = 0x21;
     constexpr uint8_t NUMERIC_END = 0x7E;
 }
-
-enum class WritingDirection { RTL, LTR };
 
 enum class InitialPosition { Left, Center, Right };
 

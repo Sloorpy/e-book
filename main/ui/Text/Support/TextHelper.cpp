@@ -1,5 +1,5 @@
-#include "TextHelper.hpp"
-#include "TextBox.hpp"
+#include "Text/Support/TextHelper.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include <vector>
 
 bool TextHelper::is_hebrew_utf8_prefix(uint8_t byte) {

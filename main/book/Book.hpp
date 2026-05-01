@@ -1,7 +1,7 @@
 #pragma once
 #include "File.hpp"
 #include "PageManager.hpp"
-#include "Text/TextBox.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
 
 #include <memory>

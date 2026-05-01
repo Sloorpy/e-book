@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "Word.hpp"
+#include "Text/Legacy/Word.hpp"
 
 class TextBox;
 

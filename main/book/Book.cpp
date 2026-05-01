@@ -1,6 +1,6 @@
 #include "Book.hpp"
-#include "Text/TextHelper.hpp"
-#include "Text/TextBox.hpp"
+#include "Text/Support/TextHelper.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include "Fonts/hebEng5x7avia.h"
 #include "Fonts/FreeMonoBold9pt7b.h"
 #include "Display.hpp"

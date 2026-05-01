@@ -1,5 +1,5 @@
 #include "PageManager.hpp"
-#include "Text/TextHelper.hpp"
+#include "Text/Support/TextHelper.hpp"
 #include <esp_log.h>
 #include <string>
 
