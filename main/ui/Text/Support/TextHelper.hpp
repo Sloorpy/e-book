@@ -14,8 +14,8 @@ namespace TextConstants {
     constexpr uint8_t HEBREW_START = 0x80;
     constexpr uint8_t HEBREW_END = 0x9A;
 
-    constexpr uint8_t NUMERIC_START = 0x21;
-    constexpr uint8_t NUMERIC_END = 0x7E;
+    constexpr uint8_t NUMERIC_START = '0';
+    constexpr uint8_t NUMERIC_END = '9';
 }
 
 enum class InitialPosition { Left, Center, Right };
