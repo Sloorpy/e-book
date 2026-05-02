@@ -8,7 +8,7 @@ class LineBreaker final {
 public:
     // Converts resolved tokens into physical screen lines.
     // Once implemented, this should be the only place that knows about wrapping.
-    static LayoutLines break_lines(ResolvedTokens tokens, const TextBox& text_box);
+    static std::vector<LayoutLine> break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box);
 
 private:
     // TODO: Add measuring helpers here.

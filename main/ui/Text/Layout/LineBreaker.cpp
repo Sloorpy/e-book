@@ -4,11 +4,11 @@
 
 #include <utility>
 
-LayoutLines LineBreaker::break_lines(ResolvedTokens tokens, const TextBox& text_box)
+std::vector<LayoutLine> LineBreaker::break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box)
 {
     (void)text_box;
 
-    LayoutLines lines;
+    std::vector<LayoutLine> lines;
     LayoutLine current_line;
     current_line.reserve(tokens.size());
 

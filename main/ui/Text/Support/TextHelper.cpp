@@ -1,6 +1,7 @@
 #include "Text/Support/TextHelper.hpp"
 #include "Text/Rendering/TextBox.hpp"
 #include <vector>
+#include "TextHelper.hpp"
 
 bool TextHelper::is_hebrew_utf8_prefix(uint8_t byte) {
     return byte == TextConstants::HEBREW_UTF8_PREFIX;
@@ -31,7 +32,13 @@ bool TextHelper::is_sign_char(uint8_t byte)
            (byte >= '{' && byte <= '~');
 }
 
-size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {
+bool TextHelper::is_newline_byte(uint8_t byte)
+{
+    return byte == '\n' || byte == '\r';
+}
+
+size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t> &str)
+{
     size_t count = 0;
     for (size_t i = 0; i < str.size();) {
         if (is_hebrew_utf8_prefix(str[i])) {

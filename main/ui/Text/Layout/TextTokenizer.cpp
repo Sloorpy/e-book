@@ -1,8 +1,8 @@
 #include "Text/Layout/TextTokenizer.hpp"
 
-TextTokens TextTokenizer::tokenize(const std::vector<uint8_t>& bytes)
+std::vector<TextToken> TextTokenizer::tokenize(const std::vector<uint8_t>& bytes)
 {
-    TextTokens tokens;
+    std::vector<TextToken>  tokens;
 
     // TODO: Implement tokenization here.
     //
@@ -20,10 +20,9 @@ TextTokens TextTokenizer::tokenize(const std::vector<uint8_t>& bytes)
         tokens.push_back(TextToken{bytes, TokenKind::Unknown});
     }
 
-    return tokens;
-}
+    for (const uint8_t byte: bytes) {
+        
+    }
 
-bool TextTokenizer::is_newline_byte(uint8_t byte)
-{
-    return byte == '\n' || byte == '\r';
+    return tokens;
 }

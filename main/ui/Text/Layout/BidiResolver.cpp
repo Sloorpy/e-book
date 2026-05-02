@@ -2,9 +2,9 @@
 
 #include <utility>
 
-ResolvedTokens BidiResolver::resolve(TextTokens tokens, Direction base_direction)
+std::vector<ResolvedToken> BidiResolver::resolve(std::vector<TextToken>  tokens, Direction base_direction)
 {
-    ResolvedTokens resolved;
+    std::vector<ResolvedToken> resolved;
     resolved.reserve(tokens.size());
 
     for (TextToken& token : tokens) {

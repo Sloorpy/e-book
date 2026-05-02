@@ -27,6 +27,7 @@ public:
     static bool is_english_char(const uint8_t byte);
     static bool is_numeric_char(const uint8_t byte);
     static bool is_sign_char(uint8_t byte);
+    static bool is_newline_byte(uint8_t byte);
 
 public:
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);

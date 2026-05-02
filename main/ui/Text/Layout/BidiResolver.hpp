@@ -6,7 +6,7 @@ class BidiResolver final {
 public:
     // Assigns a drawing direction to each token. The input tokens are passed by
     // value intentionally so callers can move token ownership into this stage.
-    static ResolvedTokens resolve(TextTokens tokens, Direction base_direction);
+    static std::vector<ResolvedToken> resolve(std::vector<TextToken> tokens, Direction base_direction);
 
 private:
     static Direction resolve_direction(const TextToken& token, Direction base_direction);

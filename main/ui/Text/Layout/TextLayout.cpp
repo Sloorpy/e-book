@@ -6,12 +6,12 @@
 
 #include <utility>
 
-LayoutLines TextLayout::build_lines(
+std::vector<LayoutLine> TextLayout::build_lines(
     const std::vector<uint8_t>& serialized_bytes,
     Direction base_direction,
     const TextBox& text_box
 ) {
-    TextTokens tokens = TextTokenizer::tokenize(serialized_bytes);
-    ResolvedTokens resolved = BidiResolver::resolve(std::move(tokens), base_direction);
+    std::vector<TextToken> tokens = TextTokenizer::tokenize(serialized_bytes);
+    std::vector<ResolvedToken> resolved = BidiResolver::resolve(std::move(tokens), base_direction);
     return LineBreaker::break_lines(std::move(resolved), text_box);
 }

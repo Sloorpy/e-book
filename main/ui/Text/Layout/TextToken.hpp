@@ -32,7 +32,4 @@ struct ResolvedToken final {
     Direction direction = Direction::LTR;
 };
 
-using TextTokens = std::vector<TextToken>;
-using ResolvedTokens = std::vector<ResolvedToken>;
 using LayoutLine = std::vector<ResolvedToken>;
-using LayoutLines = std::vector<LayoutLine>;
