@@ -2,12 +2,12 @@
 
 #include <utility>
 
-std::vector<ResolvedToken> BidiResolver::resolve(std::vector<TextToken>  tokens, Direction base_direction)
+std::vector<ResolvedToken> BidiResolver::resolve(const std::vector<TextToken>&  tokens, const Direction base_direction)
 {
     std::vector<ResolvedToken> resolved;
     resolved.reserve(tokens.size());
 
-    for (TextToken& token : tokens) {
+    for (const TextToken& token : tokens) {
         const Direction direction = resolve_direction(token, base_direction);
         resolved.push_back(ResolvedToken{std::move(token), direction});
     }
@@ -15,7 +15,7 @@ std::vector<ResolvedToken> BidiResolver::resolve(std::vector<TextToken>  tokens,
     return resolved;
 }
 
-Direction BidiResolver::resolve_direction(const TextToken& token, Direction base_direction)
+Direction BidiResolver::resolve_direction(const TextToken& token, const Direction base_direction)
 {
     switch (token.kind) {
         case TokenKind::HebrewWord:
