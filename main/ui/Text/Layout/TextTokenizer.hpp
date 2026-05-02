@@ -20,10 +20,11 @@ private:
         TokenKind kind
     );
     static bool can_extend_token(TokenKind current_kind, TokenKind next_kind);
-    static bool is_inner_sign(uint8_t byte);
     static bool can_consume_inner_sign(
         std::vector<uint8_t>::const_iterator sign,
         std::vector<uint8_t>::const_iterator end,
         TokenKind kind
     );
+    static bool is_letter_inner_sign(const uint8_t byte);
+    static bool is_number_inner_sign(const uint8_t byte);
 };

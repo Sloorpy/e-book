@@ -1,5 +1,6 @@
 #include "Text/Layout/TextTokenizer.hpp"
 #include "Text/Support/TextHelper.hpp"
+#include "TextTokenizer.hpp"
 
 std::vector<TextToken> TextTokenizer::tokenize(const std::vector<uint8_t>& bytes)
 {
@@ -82,23 +83,35 @@ bool TextTokenizer::can_extend_token(TokenKind current_kind, TokenKind next_kind
     return current_kind == next_kind && current_kind != TokenKind::Newline;
 }
 
-bool TextTokenizer::is_inner_sign(uint8_t byte)
-{
-    return byte == '.' || byte == ':' || byte == '\'' || byte == '/';
-}
-
 bool TextTokenizer::can_consume_inner_sign(
     std::vector<uint8_t>::const_iterator sign,
     std::vector<uint8_t>::const_iterator end,
     TokenKind kind
 ) {
-    if (
-        (kind != TokenKind::HebrewWord && kind != TokenKind::EnglishWord && kind != TokenKind::Number) ||
-        !is_inner_sign(*sign)
-    ) {
+    std::vector<uint8_t>::const_iterator next = sign + 1;
+
+    if (next == end) {
         return false;
     }
 
-    std::vector<uint8_t>::const_iterator next = sign + 1;
-    return next != end && token_kind(*next) == kind;
+    if (is_letter_inner_sign(*sign) && 
+        (kind == TokenKind::HebrewWord || kind == TokenKind::EnglishWord)) {
+        return token_kind(*next) == kind;
+    }
+
+    if (is_number_inner_sign(*sign) && kind != TokenKind::Number) {
+        return token_kind(*next) == kind;
+    }
+    
+    return false;
+}
+
+bool TextTokenizer::is_letter_inner_sign(const uint8_t byte)
+{
+    return byte == '\'' || byte == '/';
+}
+
+bool TextTokenizer::is_number_inner_sign(const uint8_t byte)
+{
+    return byte == '.' || byte == ':';
 }
