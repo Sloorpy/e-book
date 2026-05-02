@@ -112,5 +112,5 @@ bool TextTokenizer::is_letter_inner_sign(const uint8_t byte)
 
 bool TextTokenizer::is_number_inner_sign(const uint8_t byte)
 {
-    return byte == '.' || byte == ':' || byte == ',';
+    return byte == '.' || byte == ':' || byte == ',' || byte == '/';
 }
