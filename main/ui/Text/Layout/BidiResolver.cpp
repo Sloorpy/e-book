@@ -73,10 +73,28 @@ void BidiResolver::flush_pending_neutrals(const Direction next_strong_direction)
 
     const std::size_t neutral_run_begin = _pending_neutral_start;
     const std::size_t neutral_run_end = _resolved.size();
-    resolve_neutral_run_boundaries(neutral_run_begin, neutral_run_end, next_strong_direction);
+
+    const std::optional<Direction> single_sign_direction = resolve_single_sign_neutral_direction(
+        neutral_run_begin,
+        neutral_run_end,
+        next_strong_direction
+    );
+
+    if (single_sign_direction.has_value()) {
+        _resolved[neutral_run_begin].direction = *single_sign_direction;
+        _pending_neutral_start = neutral_run_end;
+        return;
+    }
 
     const Direction neutral_run_direction = resolve_neutral_run_direction(next_strong_direction);
-    for (std::size_t i = neutral_run_begin + 1; i + 1 < neutral_run_end; ++i) {
+    const std::size_t middle_begin = resolve_leading_attached_signs(neutral_run_begin, neutral_run_end);
+    const std::size_t middle_end = resolve_trailing_attached_signs(
+        middle_begin,
+        neutral_run_end,
+        next_strong_direction
+    );
+
+    for (std::size_t i = middle_begin; i < middle_end; ++i) {
         _resolved[i].direction = neutral_run_direction;
     }
 
@@ -101,32 +119,61 @@ Direction BidiResolver::resolve_neutral_run_direction(const Direction next_stron
     return _base_direction;
 }
 
-void BidiResolver::resolve_neutral_run_boundaries(
+std::optional<Direction> BidiResolver::resolve_single_sign_neutral_direction(
     const std::size_t begin,
     const std::size_t end,
     const Direction next_strong_direction
-) {
-    const Direction neutral_run_direction = resolve_neutral_run_direction(next_strong_direction);
-    const std::size_t first_token = begin;
-    const std::size_t last_token = end - 1;
-    const bool has_multiple_tokens = first_token != last_token;
-
-    _resolved[first_token].direction = neutral_run_direction;
-
-    if (_resolved[first_token].token.kind == TokenKind::Sign &&
-        has_previous_strong() && has_multiple_tokens) {
-        _resolved[first_token].direction = _previous_strong;
+) const
+{
+    if (begin + 1 != end || _resolved[begin].token.kind != TokenKind::Sign) {
+        return std::nullopt;
     }
 
-    if (!has_multiple_tokens) {
-        return;
+    if (has_previous_strong() && _previous_strong != next_strong_direction) {
+        return is_opening_sign(_resolved[begin].token)
+            ? next_strong_direction
+            : _previous_strong;
     }
 
-    _resolved[last_token].direction = neutral_run_direction;
+    return resolve_neutral_run_direction(next_strong_direction);
+}
 
-    if (_resolved[last_token].token.kind == TokenKind::Sign) {
-        _resolved[last_token].direction = next_strong_direction;
+std::size_t BidiResolver::resolve_leading_attached_signs(const std::size_t begin, const std::size_t end)
+{
+    if (!has_previous_strong()) {
+        return begin;
     }
+
+    std::size_t current = begin;
+
+    while (current < end && _resolved[current].token.kind == TokenKind::Sign) {
+        if (is_opening_sign(_resolved[current].token)) {
+            break;
+        }
+
+        _resolved[current].direction = _previous_strong;
+        ++current;
+    }
+
+    return current;
+}
+
+std::size_t BidiResolver::resolve_trailing_attached_signs(
+    const std::size_t begin,
+    const std::size_t end,
+    const Direction next_strong_direction
+)
+{
+    std::size_t current = end;
+
+    while (begin < current &&
+           _resolved[current - 1].token.kind == TokenKind::Sign &&
+           is_opening_sign(_resolved[current - 1].token)) {
+        --current;
+        _resolved[current].direction = next_strong_direction;
+    }
+
+    return current;
 }
 
 bool BidiResolver::has_previous_strong() const
@@ -149,4 +196,14 @@ bool BidiResolver::is_neutral(const TextToken& token) const
     }
 
     return true;
+}
+
+bool BidiResolver::is_opening_sign(const TextToken& token) const
+{
+    return !token.bytes.empty() && is_opening_sign(token.bytes.front());
+}
+
+bool BidiResolver::is_opening_sign(const uint8_t ch) const
+{
+    return ch == '(' || ch == '[' || ch == '{';
 }
