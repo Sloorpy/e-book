@@ -101,7 +101,7 @@ bool TextTokenizer::can_consume_inner_sign(
     if (is_number_inner_sign(*sign) && kind == TokenKind::Number) {
         return token_kind(*next) == kind;
     }
-    
+
     return false;
 }
 
