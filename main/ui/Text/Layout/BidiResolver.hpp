@@ -4,14 +4,26 @@
 
 class BidiResolver final {
 public:
-    // Assigns a drawing direction to each token. The input tokens are passed by
-    // value intentionally so callers can move token ownership into this stage.
-    static std::vector<ResolvedToken> resolve(const std::vector<TextToken>& tokens, const Direction base_direction);
+    static std::vector<ResolvedToken> resolve(std::vector<TextToken> tokens, const Direction base_direction);
 
 private:
-    static Direction resolve_direction(const TextToken& token, const Direction base_direction);
+    BidiResolver(std::vector<TextToken> tokens, const Direction base_direction);
 
-    // TODO: Add neutral-token handling here.
-    // Signs, spaces, and newlines should not decide direction by themselves.
-    // Resolve them from nearby strong tokens or fall back to base_direction.
+private:
+    std::vector<ResolvedToken> run();
+
+private:
+    void resolve_token(TextToken& token);
+    Direction resolve_direction(const TextToken& token) const;
+    bool has_pending_neutrals() const;
+    void flush_pending_neutrals(const Direction direction);
+    bool is_neutral(const TextToken& token) const;
+
+private:
+    std::vector<TextToken> _tokens;
+    std::vector<ResolvedToken> _resolved;
+    Direction _base_direction;
+    Direction _previous_strong;
+    std::size_t _pending_neutral_start = 0;
+    bool _has_previous_strong = false;
 };
