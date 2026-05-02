@@ -93,7 +93,7 @@ bool TextTokenizer::can_consume_inner_sign(
         return false;
     }
 
-    if (is_letter_inner_sign(*sign) && 
+    if (is_letter_inner_sign(*sign) &&
         (kind == TokenKind::HebrewWord || kind == TokenKind::EnglishWord)) {
         return token_kind(*next) == kind;
     }
