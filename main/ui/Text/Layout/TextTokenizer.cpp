@@ -1,6 +1,5 @@
 #include "Text/Layout/TextTokenizer.hpp"
 #include "Text/Support/TextHelper.hpp"
-#include "TextTokenizer.hpp"
 
 std::vector<TextToken> TextTokenizer::tokenize(const std::vector<uint8_t>& bytes)
 {
@@ -99,7 +98,7 @@ bool TextTokenizer::can_consume_inner_sign(
         return token_kind(*next) == kind;
     }
 
-    if (is_number_inner_sign(*sign) && kind != TokenKind::Number) {
+    if (is_number_inner_sign(*sign) && kind == TokenKind::Number) {
         return token_kind(*next) == kind;
     }
     
@@ -108,10 +107,10 @@ bool TextTokenizer::can_consume_inner_sign(
 
 bool TextTokenizer::is_letter_inner_sign(const uint8_t byte)
 {
-    return byte == '\'' || byte == '/';
+    return byte == '\'' || byte == '/' || byte == '-';
 }
 
 bool TextTokenizer::is_number_inner_sign(const uint8_t byte)
 {
-    return byte == '.' || byte == ':';
+    return byte == '.' || byte == ':' || byte == ',';
 }
