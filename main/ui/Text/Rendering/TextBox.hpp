@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Display.hpp"
-#include "Text/Layout/TextLayout.hpp"
+#include "Text/Layout/TextToken.hpp"
 #include "Text/Support/TextHelper.hpp"
 #include "Text/Legacy/Word.hpp"
 #include <cstdint>
@@ -50,7 +50,8 @@ private:
     void write_token(const ResolvedToken& token);
     void write_layout_line(const LayoutLine& line , const InitialPosition pos);
 
-private:
+    void set_line_cursor(int16_t line_width, InitialPosition pos);
+    int16_t glyph_advance(const GFXglyph& glyph) const;
     void draw_char(const Vector2 position, const char letter);
     void write_word(const Word& word);
     void write_line(const Line& line, InitialPosition pos);
