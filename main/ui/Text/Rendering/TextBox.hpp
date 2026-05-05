@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Display.hpp"
+#include "Text/Layout/TextLayout.hpp"
 #include "Text/Support/TextHelper.hpp"
 #include "Text/Legacy/Word.hpp"
 #include <cstdint>
@@ -45,6 +46,10 @@ public:
     int16_t available_width() const;
     int16_t width() const;
     
+private:
+    void write_token(const ResolvedToken& token);
+    void write_layout_line(const LayoutLine& line);
+
 private:
     void draw_char(const Vector2 position, const char letter);
     void write_word(const Word& word);

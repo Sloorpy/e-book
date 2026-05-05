@@ -197,3 +197,31 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPo
     _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
 }
+
+void TextBox::write_token(const ResolvedToken &token)
+{
+    std::vector<uint8_t> bytes = token.token.bytes;
+
+    if (token.direction == Direction::LTR) {
+        std::reverse(bytes.begin(), bytes.end());
+    }
+
+
+    for (const uint8_t byte: bytes) {
+        const GFXglyph* const glyph = TextHelper::get_char_font(byte, _font);
+        if (glyph == nullptr) {
+            continue;
+        }
+
+        _cursor.x -= static_cast<int16_t>(glyph->xAdvance) * static_cast<int16_t>(_textsize);
+
+        draw_char(Vector2{_cursor.x, _cursor.y}, byte);
+    }
+}
+
+void TextBox::write_layout_line(const LayoutLine &line)
+{
+    for (const ResolvedToken& token: line) {
+        write_token(token);
+    }
+}
