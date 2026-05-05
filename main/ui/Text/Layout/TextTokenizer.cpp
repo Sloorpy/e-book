@@ -1,14 +1,49 @@
 #include "Text/Layout/TextTokenizer.hpp"
 #include "Text/Support/TextHelper.hpp"
 
+TextTokenizer::Iterator::Iterator(const std::vector<uint8_t>& serialized_bytes)
+    : _serialized_bytes(serialized_bytes)
+    , _current(_serialized_bytes.begin())
+{
+    read_next();
+}
+
+bool TextTokenizer::Iterator::has_next() const
+{
+    return _has_value;
+}
+
+const TextToken& TextTokenizer::Iterator::value() const
+{
+    return _value;
+}
+
+void TextTokenizer::Iterator::next()
+{
+    read_next();
+}
+
+void TextTokenizer::Iterator::read_next()
+{
+    if (_current == _serialized_bytes.end()) {
+        _value = TextToken{};
+        _has_value = false;
+        return;
+    }
+
+    _value = TextTokenizer::next_token(_current, _serialized_bytes.end());
+    _has_value = true;
+}
+
 std::vector<TextToken> TextTokenizer::tokenize(const std::vector<uint8_t>& bytes)
 {
     std::vector<TextToken> tokens;
     tokens.reserve(bytes.size());
 
-    std::vector<uint8_t>::const_iterator current = bytes.begin();
-    while (current != bytes.end()) {
-        tokens.push_back(next_token(current, bytes.end()));
+    Iterator iterator(bytes);
+    while (iterator.has_next()) {
+        tokens.push_back(iterator.value());
+        iterator.next();
     }
 
     return tokens;

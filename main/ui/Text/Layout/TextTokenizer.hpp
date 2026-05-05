@@ -6,6 +6,25 @@
 
 class TextTokenizer final {
 public:
+    class Iterator final {
+    public:
+        explicit Iterator(const std::vector<uint8_t>& serialized_bytes);
+
+        bool has_next() const;
+        const TextToken& value() const;
+        void next();
+
+    private:
+        void read_next();
+
+    private:
+        const std::vector<uint8_t>& _serialized_bytes;
+        std::vector<uint8_t>::const_iterator _current;
+        TextToken _value;
+        bool _has_value = false;
+    };
+
+public:
     static std::vector<TextToken> tokenize(const std::vector<uint8_t>& bytes);
 
 private:
