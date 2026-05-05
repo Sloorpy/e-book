@@ -54,7 +54,7 @@ private:
     int16_t glyph_advance(const GFXglyph& glyph) const;
     void draw_char(const Vector2 position, const char letter);
     void write_word(const Word& word);
-    void write_line(const Line& line, InitialPosition pos);
+    void write_legacy_line(const LegacyLine& line, InitialPosition pos);
     int16_t line_height() const;
     bool bottom_reached() const;
 

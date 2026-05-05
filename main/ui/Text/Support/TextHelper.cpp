@@ -75,7 +75,7 @@ size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t> &str)
     return count;
 }
 
-uint16_t TextHelper::line_width(const Line &line, const TextBox &tb)
+uint16_t TextHelper::line_width(const LegacyLine &line, const TextBox &tb)
 {
     if (line.empty()) {
         return 0;

@@ -82,7 +82,7 @@ Word BookString::next_word() {
     return word;
 }
 
-Line BookString::next_line(const TextBox& tb) {
+LegacyLine BookString::next_line(const TextBox& tb) {
     skip_spaces();
 
     if (_pos >= _str.size()) {
@@ -97,8 +97,8 @@ Line BookString::next_line(const TextBox& tb) {
     // TODO: Replace this compatibility path with TextLayout::build_lines().
     // This method currently mixes tokenization, direction handling, line
     // breaking, and byte consumption in one place.
-    Line line;
-    Line reverse_words;
+    LegacyLine line;
+    LegacyLine reverse_words;
     int line_width = 0;
 
     while (!is_end()) {

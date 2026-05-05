@@ -22,4 +22,4 @@ struct Word {
     Word reverse();
 };
 
-using Line = std::vector<Word>;
+using LegacyLine = std::vector<Word>;

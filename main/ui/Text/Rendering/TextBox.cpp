@@ -111,7 +111,7 @@ void TextBox::write_word(const Word& word)
     _cursor.x = pen_x;
 }
 
-void TextBox::write_line(const Line &line, InitialPosition pos)
+void TextBox::write_legacy_line(const LegacyLine &line, InitialPosition pos)
 {
     if (line.empty()) {
         return;
@@ -176,7 +176,7 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPo
     BookString bs(str);
 
     while (!bs.end() && !bottom_reached()) {
-        const Line line = bs.next_line(*this);
+        const LegacyLine line = bs.next_line(*this);
         const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
 
         next_line(pos, line_width);
