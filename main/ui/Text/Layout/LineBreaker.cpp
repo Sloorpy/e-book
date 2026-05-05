@@ -47,6 +47,11 @@ void LineBreaker::process_token(ResolvedToken& token)
         push_current_line();
     }
 
+
+    if (_current_line.empty() && token.token.kind == TokenKind::Space) {
+        return;
+    }
+
     _current_width += token_width;
     _current_line.push_back(std::move(token));
 }
