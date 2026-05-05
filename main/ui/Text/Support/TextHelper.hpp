@@ -34,7 +34,6 @@ public:
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);
     static uint16_t line_width(const LegacyLine& line, const TextBox& tb);
     static std::size_t line_width(const LayoutLine& line, const TextBox& tb);
-    static std::size_t line_width(const LayoutLine& line, const GFXfont* font, uint8_t text_size);
     static std::size_t token_width(const ResolvedToken& token, const TextBox& tb);
     static std::size_t token_width(const ResolvedToken& token, const GFXfont* font, uint8_t text_size);
     static size_t space_width(const TextBox& tb);
@@ -46,4 +45,7 @@ public:
 public:
     static std::vector<uint8_t> serialize_to_font_indices(const std::vector<uint8_t>& input, const GFXfont* font);
     static std::vector<uint8_t> serialize_to_font_indices(const std::string& input, const GFXfont* font);
+
+private:
+    static std::size_t bytes_width(const std::vector<uint8_t>& bytes, const GFXfont* font, uint8_t text_size);
 };
