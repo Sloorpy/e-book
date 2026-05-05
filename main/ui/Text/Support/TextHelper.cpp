@@ -66,7 +66,7 @@ uint16_t TextHelper::line_width(const LegacyLine &line, const TextBox &tb)
     return width;
 }
 
-std::size_t TextHelper::line_width(const LayoutLine& line, const TextBox& tb)
+std::size_t TextHelper::line_width(const Line& line, const TextBox& tb)
 {
     std::size_t width = 0;
     for (const ResolvedToken& token : line) {

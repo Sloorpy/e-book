@@ -10,13 +10,13 @@ class TextBox;
 
 class LineBreaker final {
 public:
-    static std::vector<LayoutLine> break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box);
+    static std::vector<Line> break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box);
 
 private:
     LineBreaker(std::vector<ResolvedToken> tokens, const TextBox& text_box);
 
 private:
-    std::vector<LayoutLine> run();
+    std::vector<Line> run();
 
 private:
     void process_token(ResolvedToken& token);
@@ -25,8 +25,8 @@ private:
 
 private:
     std::vector<ResolvedToken> _tokens;
-    std::vector<LayoutLine> _lines;
-    LayoutLine _current_line;
+    std::vector<Line> _lines;
+    Line _current_line;
     const GFXfont* _font;
     std::size_t _max_width;
     std::size_t _current_width = 0;

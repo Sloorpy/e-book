@@ -48,7 +48,7 @@ public:
     
 private:
     void write_token(const ResolvedToken& token);
-    void write_layout_line(const LayoutLine& line , const InitialPosition pos);
+    void write_layout_line(const Line& line , const InitialPosition pos);
 
     void set_line_cursor(int16_t line_width, InitialPosition pos);
     int16_t glyph_advance(const GFXglyph& glyph) const;

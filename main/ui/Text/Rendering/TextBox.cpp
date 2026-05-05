@@ -150,9 +150,9 @@ size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos
 
     ScopedDisplayFont display_font(*_display, _font);
 
-    std::vector<LayoutLine> lines = TextLayout::build_lines(str, Direction::RTL, *this);
+    std::vector<Line> lines = TextLayout::build_lines(str, Direction::RTL, *this);
 
-    for (const LayoutLine& line: lines) {
+    for (const Line& line: lines) {
         if (bottom_reached()) {
             break;
         }
@@ -206,7 +206,7 @@ void TextBox::write_token(const ResolvedToken &token)
     }
 }
 
-void TextBox::write_layout_line(const LayoutLine &line, const InitialPosition pos)
+void TextBox::write_layout_line(const Line &line, const InitialPosition pos)
 {
     const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
     set_line_cursor(line_width, pos);

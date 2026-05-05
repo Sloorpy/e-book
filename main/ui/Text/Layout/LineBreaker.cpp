@@ -5,7 +5,7 @@
 
 #include <utility>
 
-std::vector<LayoutLine> LineBreaker::break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box)
+std::vector<Line> LineBreaker::break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box)
 {
     return LineBreaker(std::move(tokens), text_box).run();
 }
@@ -22,7 +22,7 @@ LineBreaker::LineBreaker(std::vector<ResolvedToken> tokens, const TextBox& text_
     }
 }
 
-std::vector<LayoutLine> LineBreaker::run()
+std::vector<Line> LineBreaker::run()
 {
     for (ResolvedToken& token : _tokens) {
         process_token(token);
@@ -64,6 +64,6 @@ bool LineBreaker::should_start_new_line(const std::size_t token_width) const
 void LineBreaker::push_current_line()
 {
     _lines.push_back(std::move(_current_line));
-    _current_line = LayoutLine{};
+    _current_line = Line{};
     _current_width = 0;
 }

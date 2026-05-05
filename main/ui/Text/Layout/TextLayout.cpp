@@ -6,7 +6,7 @@
 
 #include <utility>
 
-std::vector<LayoutLine> TextLayout::build_lines(
+std::vector<Line> TextLayout::build_lines(
     const std::vector<uint8_t>& serialized_bytes,
     Direction base_direction,
     const TextBox& text_box
