@@ -1,4 +1,5 @@
 #pragma once
+#include "Text/Layout/TextToken.hpp"
 #include "Text/Legacy/Word.hpp"
 
 #include <cstdint>
@@ -32,6 +33,10 @@ public:
 public:
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);
     static uint16_t line_width(const Line& line, const TextBox& tb);
+    static std::size_t line_width(const LayoutLine& line, const TextBox& tb);
+    static std::size_t line_width(const LayoutLine& line, const GFXfont* font, uint8_t text_size);
+    static std::size_t token_width(const ResolvedToken& token, const TextBox& tb);
+    static std::size_t token_width(const ResolvedToken& token, const GFXfont* font, uint8_t text_size);
     static size_t space_width(const TextBox& tb);
     
 public:

@@ -39,9 +39,10 @@ void LineBreaker::process_token(ResolvedToken& token)
 {
     if (token.token.kind == TokenKind::Newline) {
         push_current_line();
+        return;
     }
 
-    const std::size_t token_width = measure_token_width(token);
+    const std::size_t token_width = TextHelper::token_width(token, _font, _text_size);
     if (should_start_new_line(token_width)) {
         push_current_line();
     }
@@ -60,30 +61,4 @@ void LineBreaker::push_current_line()
     _lines.push_back(std::move(_current_line));
     _current_line = LayoutLine{};
     _current_width = 0;
-}
-
-std::size_t LineBreaker::measure_token_width(const ResolvedToken& token) const
-{
-    return measure_bytes_width(token.token.bytes);
-}
-
-std::size_t LineBreaker::measure_bytes_width(const std::vector<uint8_t>& bytes) const
-{
-    if (_font == nullptr) {
-        return 0;
-    }
-
-    std::size_t width = 0;
-    for (const uint8_t byte : bytes) {
-        if (!TextHelper::is_char_in_font_range(byte, _font)) {
-            continue;
-        }
-
-        const GFXglyph* const glyph = TextHelper::get_char_font(static_cast<char>(byte), _font);
-        if (glyph != nullptr) {
-            width += static_cast<std::size_t>(glyph->xAdvance) * _text_size;
-        }
-    }
-
-    return width;
 }
