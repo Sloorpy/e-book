@@ -1,6 +1,7 @@
 #include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
 #include "Text/Legacy/BookString.hpp"
+#include "ScopedDisplayFont.hpp"
 #include <Fonts/hebEng5x7avia.h>
 #include <cstdint>
 #include <cstring>
@@ -155,8 +156,7 @@ size_t TextBox::print(const std::vector<uint8_t>& str, const InitialPosition pos
         return 0;
     }
 
-    const GFXfont* old_font = _display->getFont();
-    _display->setFont(_font);
+    ScopedDisplayFont display_font(*_display, _font);
 
     BookString bs(str);
     const size_t original_len = str.size();
@@ -169,7 +169,6 @@ size_t TextBox::print(const std::vector<uint8_t>& str, const InitialPosition pos
         next_line(pos, line_width);
     }
 
-    _display->setFont(old_font);
     return original_len - bs.remaining_bytes();
 }
 

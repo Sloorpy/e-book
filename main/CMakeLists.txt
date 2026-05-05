@@ -13,6 +13,7 @@ idf_component_register(SRCS
     "ui/Text/Layout/TextLayout.cpp"
     "ui/Text/Layout/TextTokenizer.cpp"
     "ui/Text/Rendering/TextBox.cpp"
+    "ui/Text/Rendering/ScopedDisplayFont.cpp"
     "ui/Text/Support/TextHelper.cpp"
     "ui/Display.cpp"
     "states/ProgramState.cpp"
