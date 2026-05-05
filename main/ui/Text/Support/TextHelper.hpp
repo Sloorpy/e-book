@@ -19,7 +19,7 @@ namespace TextConstants {
     constexpr uint8_t NUMERIC_END = '9';
 }
 
-enum class InitialPosition { Left, Center, Right };
+enum class InitialPosition : uint8_t { Left, Center, Right };
 
 class TextHelper {
 public:

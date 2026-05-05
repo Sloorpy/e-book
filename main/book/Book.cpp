@@ -64,8 +64,8 @@ void Book::display_title()
     TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);
     TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
 
-    title_tb.print(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
-    author_tb.print(TextHelper::serialize_to_font_indices(author, get_font()));
+    title_tb.write(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
+    author_tb.write(TextHelper::serialize_to_font_indices(author, get_font()));
     
     static const Vector2 bitmap_position{(PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2, 150};
     draw_cover(bitmap_position.x, bitmap_position.y);
@@ -79,7 +79,7 @@ void Book::no_more_pages()
     TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
     
     static constexpr std::string_view msg = "נגמרו העמודים :)";
-    text_box.print(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
+    text_box.write(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
 }
 
 size_t Book::print_page_size(const std::vector<uint8_t>& text)
@@ -98,7 +98,7 @@ void Book::display_current_page()
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
     );
 
-    make_page_text_box().print(curr_text, InitialPosition::Right);
+    make_page_text_box().write(curr_text, InitialPosition::Right);
 }
 
 void Book::reset_book()
@@ -216,8 +216,8 @@ void Book::display_chapter_title()
     TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
     TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);    
 
-    number_tb.print(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center);
-    title_tb.print(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center);
+    number_tb.write(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center);
+    title_tb.write(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center);
 }
 
 void Book::display_header()
@@ -233,9 +233,9 @@ void Book::display_header()
     const uint32_t finished_percentage = (pages_read * 100) / (_current_chapter.pages.size() * _page_manager.chapter_count());
     printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
     
-    left_tb.print(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left);
-    middle_tb.print(TextHelper::serialize_to_font_indices("|", middle_tb.font()), InitialPosition::Center);
-    right_tb.print(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right);
+    left_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left);
+    middle_tb.write(TextHelper::serialize_to_font_indices("|", middle_tb.font()), InitialPosition::Center);
+    right_tb.write(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right);
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)

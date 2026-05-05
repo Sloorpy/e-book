@@ -151,25 +151,26 @@ void TextBox::next_line(InitialPosition pos, int16_t line_width)
     _cursor.y += line_height();
 }
 
-size_t TextBox::print(const std::vector<uint8_t>& str, const InitialPosition pos) {
+size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos) {
     if (_font == nullptr) {
         return 0;
     }
 
     ScopedDisplayFont display_font(*_display, _font);
 
-    BookString bs(str);
-    const size_t original_len = str.size();
+    std::vector<LayoutLine> lines = TextLayout::build_lines(str,
+         pos == InitialPosition::Left ?  Direction::LTR :  Direction::RTL,
+        *this);
 
-    while (!bs.end() && !bottom_reached()) {
-        const Line line = bs.next_line(*this);
-        const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
+    for (const LayoutLine& line: lines) {
 
-        write_line(line, pos);
-        next_line(pos, line_width);
+        if (bottom_reached()) {
+            return;
+        }
+        write_layout_line(line, pos);
     }
 
-    return original_len - bs.remaining_bytes();
+    return 0;
 }
 
 size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPosition pos)
@@ -218,7 +219,7 @@ void TextBox::write_token(const ResolvedToken &token)
     }
 }
 
-void TextBox::write_layout_line(const LayoutLine &line)
+void TextBox::write_layout_line(const LayoutLine &line, const InitialPosition pos)
 {
     for (const ResolvedToken& token: line) {
         write_token(token);

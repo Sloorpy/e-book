@@ -31,7 +31,7 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t print(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
+    size_t write(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
     size_t next_print_size(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
     void next_line(InitialPosition pos = InitialPosition::Left, int16_t line_width = 0);
 
@@ -48,7 +48,7 @@ public:
     
 private:
     void write_token(const ResolvedToken& token);
-    void write_layout_line(const LayoutLine& line);
+    void write_layout_line(const LayoutLine& line , const InitialPosition pos);
 
 private:
     void draw_char(const Vector2 position, const char letter);
