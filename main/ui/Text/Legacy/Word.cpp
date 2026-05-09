@@ -1,6 +1,6 @@
-#include "Word.hpp"
-#include "TextBox.hpp"
-#include "TextHelper.hpp"
+#include "Text/Legacy/Word.hpp"
+#include "Text/Rendering/TextBox.hpp"
+#include "Text/Support/TextHelper.hpp"
 #include <vector>
 
 WordType Word::word_type() const

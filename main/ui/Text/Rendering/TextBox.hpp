@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Display.hpp"
-#include "Text/TextHelper.hpp"
-#include "Text/Word.hpp"
+#include "Text/Layout/TextToken.hpp"
+#include "Text/Support/TextHelper.hpp"
+#include "Text/Legacy/Word.hpp"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -30,7 +31,7 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t print(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
+    size_t write(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
     size_t next_print_size(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
     void next_line(InitialPosition pos = InitialPosition::Left, int16_t line_width = 0);
 
@@ -39,6 +40,8 @@ public:
     const GFXfont* font() const { return _font; }
     uint8_t textSize() const { return _textsize; }
     int16_t left() const { return _left; }
+    int16_t bottom() const { return _bottom; }
+    int16_t cursor_y() const { return _cursor.y; }
     int16_t line_start_x() const { return _left; }
 
 public:
@@ -46,9 +49,15 @@ public:
     int16_t width() const;
     
 private:
+    TextPage build_page_layout(const std::vector<uint8_t>& str) const;
+    void write_token(const ResolvedToken& token);
+    void write_line(const Line& line , const InitialPosition pos);
+
+    void set_line_cursor(int16_t line_width, InitialPosition pos);
+    int16_t glyph_advance(const GFXglyph& glyph) const;
     void draw_char(const Vector2 position, const char letter);
     void write_word(const Word& word);
-    void write_line(const Line& line, InitialPosition pos);
+    void write_legacy_line(const LegacyLine& line, InitialPosition pos);
     int16_t line_height() const;
     bool bottom_reached() const;
 

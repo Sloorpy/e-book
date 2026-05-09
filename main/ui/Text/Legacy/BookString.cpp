@@ -1,6 +1,6 @@
-#include "BookString.hpp"
-#include "TextBox.hpp"
-#include "TextHelper.hpp"
+#include "Text/Legacy/BookString.hpp"
+#include "Text/Rendering/TextBox.hpp"
+#include "Text/Support/TextHelper.hpp"
 #include <vector>
 #include <cstring>
 
@@ -82,7 +82,7 @@ Word BookString::next_word() {
     return word;
 }
 
-Line BookString::next_line(const TextBox& tb) {
+LegacyLine BookString::next_line(const TextBox& tb) {
     skip_spaces();
 
     if (_pos >= _str.size()) {
@@ -94,8 +94,11 @@ Line BookString::next_line(const TextBox& tb) {
         return {};
     }
 
-    Line line;
-    Line reverse_words;
+    // TODO: Replace this compatibility path with TextLayout::build_lines().
+    // This method currently mixes tokenization, direction handling, line
+    // breaking, and byte consumption in one place.
+    LegacyLine line;
+    LegacyLine reverse_words;
     int line_width = 0;
 
     while (!is_end()) {
@@ -122,12 +125,19 @@ Line BookString::next_line(const TextBox& tb) {
                 line.push_back(next_word());
                 break;
             case WordType::ENGLISH:
+                // TODO: English should become an LTR token/run instead of a
+                // reversed word. Signs next to English should be resolved by
+                // BidiResolver before rendering.
                 reverse_words.push_back(next_word().reverse());
                 break;
             case WordType::NUMERIC:
+                // TODO: Numbers should keep their internal LTR order while
+                // their position is resolved from the surrounding text.
                 line.push_back(next_word().reverse());
                 break;
             case WordType::SIGN:
+                // TODO: Signs should be separate neutral tokens first, then
+                // attached to neighboring words/numbers only when rules say so.
                 line.push_back(next_word().reverse());
                 break;
             default:

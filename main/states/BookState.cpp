@@ -1,5 +1,5 @@
 #include "BookState.hpp"
-#include "Text/TextBox.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include "Fonts/hebEng5x7avia.h"
 
 #include <esp_timer.h>

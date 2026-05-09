@@ -1,6 +1,7 @@
-#include "TextHelper.hpp"
-#include "TextBox.hpp"
+#include "Text/Support/TextHelper.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include <vector>
+#include "TextHelper.hpp"
 
 bool TextHelper::is_hebrew_utf8_prefix(uint8_t byte) {
     return byte == TextConstants::HEBREW_UTF8_PREFIX;
@@ -31,7 +32,13 @@ bool TextHelper::is_sign_char(uint8_t byte)
            (byte >= '{' && byte <= '~');
 }
 
-size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {
+bool TextHelper::is_newline_byte(uint8_t byte)
+{
+    return byte == '\n' || byte == '\r';
+}
+
+size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t> &str)
+{
     size_t count = 0;
     for (size_t i = 0; i < str.size();) {
         if (is_hebrew_utf8_prefix(str[i])) {
@@ -44,7 +51,7 @@ size_t TextHelper::count_hebrew_chars(const std::vector<uint8_t>& str) {
     return count;
 }
 
-uint16_t TextHelper::line_width(const Line &line, const TextBox &tb)
+uint16_t TextHelper::line_width(const LegacyLine &line, const TextBox &tb)
 {
     if (line.empty()) {
         return 0;
@@ -56,6 +63,50 @@ uint16_t TextHelper::line_width(const Line &line, const TextBox &tb)
         width += TextHelper::space_width(tb);
     }
     width -= TextHelper::space_width(tb);
+    return width;
+}
+
+std::size_t TextHelper::line_width(const Line& line, const TextBox& tb)
+{
+    std::size_t width = 0;
+    for (const ResolvedToken& token : line.tokens) {
+        width += token_width(token, tb);
+    }
+
+    return width;
+}
+
+std::size_t TextHelper::token_width(const ResolvedToken& token, const TextBox& tb)
+{
+    return token_width(token, tb.font(), tb.textSize());
+}
+
+std::size_t TextHelper::token_width(const ResolvedToken& token, const GFXfont* font, const uint8_t text_size)
+{
+    if (token.token.kind == TokenKind::Newline) {
+        return 0;
+    }
+
+    return bytes_width(token.token.bytes, font, text_size);
+}
+
+std::size_t TextHelper::bytes_width(const std::vector<uint8_t>& bytes, const GFXfont* font, const uint8_t text_size)
+{
+    if (font == nullptr) {
+        return 0;
+    }
+
+    std::size_t width = 0;
+    for (const uint8_t byte : bytes) {
+        const GFXglyph* const glyph = TextHelper::get_char_font(static_cast<char>(byte), font);
+        if (glyph == nullptr) {
+            continue;
+        }
+
+        width += static_cast<std::size_t>(glyph->xAdvance) *
+                 static_cast<std::size_t>(text_size);
+    }
+
     return width;
 }
 

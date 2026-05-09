@@ -1,9 +1,12 @@
-#include "TextBox.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
-#include "BookString.hpp"
+#include "Text/Layout/TextLayout.hpp"
+#include "ScopedDisplayFont.hpp"
 #include <Fonts/hebEng5x7avia.h>
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 TextBox::TextBox(std::shared_ptr<Display> display,
@@ -107,25 +110,14 @@ void TextBox::write_word(const Word& word)
     _cursor.x = pen_x;
 }
 
-void TextBox::write_line(const Line &line, InitialPosition pos)
+void TextBox::write_legacy_line(const LegacyLine &line, InitialPosition pos)
 {
     if (line.empty()) {
         return;
     }
 
     const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
-
-    switch (pos) {
-        case InitialPosition::Left:
-            _cursor.x = _left + line_width;
-            break;
-        case InitialPosition::Center:
-            _cursor.x = _right - (width() - line_width) / 2;
-            break;
-        case InitialPosition::Right:
-            _cursor.x = _right;
-            break;
-    }
+    set_line_cursor(line_width, pos);
 
     const Word& last_word = line.back();
     for (const Word& word : line) {
@@ -150,27 +142,20 @@ void TextBox::next_line(InitialPosition pos, int16_t line_width)
     _cursor.y += line_height();
 }
 
-size_t TextBox::print(const std::vector<uint8_t>& str, const InitialPosition pos) {
+size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos) {
     if (_font == nullptr) {
         return 0;
     }
 
-    const GFXfont* old_font = _display->getFont();
-    _display->setFont(_font);
+    ScopedDisplayFont display_font(*_display, _font);
 
-    BookString bs(str);
-    const size_t original_len = str.size();
+    TextPage page = build_page_layout(str);
 
-    while (!bs.end() && !bottom_reached()) {
-        const Line line = bs.next_line(*this);
-        const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
-
+    for (const Line& line: page.lines) {
         write_line(line, pos);
-        next_line(pos, line_width);
     }
 
-    _display->setFont(old_font);
-    return original_len - bs.remaining_bytes();
+    return page.consumed_bytes;
 }
 
 size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPosition pos)
@@ -178,22 +163,64 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPo
     if (_font == nullptr) {
         return 0;
     }
-    const GFXfont* old_font = _display->getFont();
-    _display->setFont(_font);
 
-    const size_t original_len = str.size();
-    const Vector2 original_cursor = _cursor;
+    ScopedDisplayFont display_font(*_display, _font);
 
-    BookString bs(str);
+    return build_page_layout(str).consumed_bytes;
+}
 
-    while (!bs.end() && !bottom_reached()) {
-        const Line line = bs.next_line(*this);
-        const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
+TextPage TextBox::build_page_layout(const std::vector<uint8_t>& str) const
+{
+    return TextLayout::build_page(str, Direction::RTL, *this);
+}
 
-        next_line(pos, line_width);
+void TextBox::write_token(const ResolvedToken &token)
+{
+    std::vector<uint8_t> bytes = token.token.bytes;
+
+    if (token.direction == Direction::LTR) {
+        std::reverse(bytes.begin(), bytes.end());
     }
 
-    _cursor = original_cursor;
-    _display->setFont(old_font);
-    return original_len - bs.remaining_bytes();
+    for (const uint8_t byte: bytes) {
+        const GFXglyph* const glyph = TextHelper::get_char_font(byte, _font);
+        if (glyph == nullptr) {
+            continue;
+        }
+
+        _cursor.x -= glyph_advance(*glyph);
+        draw_char(Vector2{_cursor.x, _cursor.y}, byte);
+    }
+}
+
+void TextBox::write_line(const Line &line, const InitialPosition pos)
+{
+    const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
+    set_line_cursor(line_width, pos);
+
+    for (const ResolvedToken& token: line.tokens) {
+        write_token(token);
+    }
+
+    next_line(pos, line_width);
+}
+
+void TextBox::set_line_cursor(const int16_t line_width, const InitialPosition pos)
+{
+    switch (pos) {
+        case InitialPosition::Left:
+            _cursor.x = _left + line_width;
+            break;
+        case InitialPosition::Center:
+            _cursor.x = _right - (width() - line_width) / 2;
+            break;
+        case InitialPosition::Right:
+            _cursor.x = _right;
+            break;
+    }
+}
+
+int16_t TextBox::glyph_advance(const GFXglyph& glyph) const
+{
+    return static_cast<int16_t>(glyph.xAdvance) * static_cast<int16_t>(_textsize);
 }

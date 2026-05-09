@@ -1,5 +1,6 @@
 #pragma once
-#include "Word.hpp"
+#include "Text/Layout/TextToken.hpp"
+#include "Text/Legacy/Word.hpp"
 
 #include <cstdint>
 #include <cstddef>
@@ -14,13 +15,11 @@ namespace TextConstants {
     constexpr uint8_t HEBREW_START = 0x80;
     constexpr uint8_t HEBREW_END = 0x9A;
 
-    constexpr uint8_t NUMERIC_START = 0x21;
-    constexpr uint8_t NUMERIC_END = 0x7E;
+    constexpr uint8_t NUMERIC_START = '0';
+    constexpr uint8_t NUMERIC_END = '9';
 }
 
-enum class WritingDirection { RTL, LTR };
-
-enum class InitialPosition { Left, Center, Right };
+enum class InitialPosition : uint8_t { Left, Center, Right };
 
 class TextHelper {
 public:
@@ -29,10 +28,14 @@ public:
     static bool is_english_char(const uint8_t byte);
     static bool is_numeric_char(const uint8_t byte);
     static bool is_sign_char(uint8_t byte);
+    static bool is_newline_byte(uint8_t byte);
 
 public:
     static size_t count_hebrew_chars(const std::vector<uint8_t>& str);
-    static uint16_t line_width(const Line& line, const TextBox& tb);
+    static uint16_t line_width(const LegacyLine& line, const TextBox& tb);
+    static std::size_t line_width(const Line& line, const TextBox& tb);
+    static std::size_t token_width(const ResolvedToken& token, const TextBox& tb);
+    static std::size_t token_width(const ResolvedToken& token, const GFXfont* font, uint8_t text_size);
     static size_t space_width(const TextBox& tb);
     
 public:
@@ -42,4 +45,7 @@ public:
 public:
     static std::vector<uint8_t> serialize_to_font_indices(const std::vector<uint8_t>& input, const GFXfont* font);
     static std::vector<uint8_t> serialize_to_font_indices(const std::string& input, const GFXfont* font);
+
+private:
+    static std::size_t bytes_width(const std::vector<uint8_t>& bytes, const GFXfont* font, uint8_t text_size);
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "Word.hpp"
+#include "Text/Legacy/Word.hpp"
 
 class TextBox;
 
@@ -12,7 +12,7 @@ public:
 
     Word get_word();
     Word next_word();
-    Line next_line(const TextBox& tb);
+    LegacyLine next_line(const TextBox& tb);
     bool end() const;
     size_t remaining_bytes() const;
 

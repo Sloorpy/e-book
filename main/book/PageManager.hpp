@@ -1,7 +1,7 @@
 #pragma once
 
 #include "File.hpp"
-#include "Text/TextHelper.hpp"
+#include "Text/Support/TextHelper.hpp"
 
 #include <cstdint>
 #include <string>
