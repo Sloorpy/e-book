@@ -99,9 +99,7 @@ bool PageSerializer::should_start_new_line(const std::size_t token_width) const
 void PageSerializer::push_current_line()
 {
     _lines.push_back(std::move(_current_line));
-    if (_cursor.x > 0) {
-        _cursor.y += line_height();
-    }
+    _cursor.y += line_height();
 
     _current_line = Line{};
     _cursor.x = 0;
