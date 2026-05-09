@@ -40,6 +40,8 @@ public:
     const GFXfont* font() const { return _font; }
     uint8_t textSize() const { return _textsize; }
     int16_t left() const { return _left; }
+    int16_t bottom() const { return _bottom; }
+    int16_t cursor_y() const { return _cursor.y; }
     int16_t line_start_x() const { return _left; }
 
 public:

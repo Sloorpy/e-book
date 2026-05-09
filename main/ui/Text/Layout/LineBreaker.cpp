@@ -5,65 +5,104 @@
 
 #include <utility>
 
-std::vector<Line> LineBreaker::break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box)
+std::vector<Line> PageSerializer::serialize_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box)
 {
-    return LineBreaker(std::move(tokens), text_box).run();
+    return serialize(std::move(tokens), text_box).lines;
 }
 
-LineBreaker::LineBreaker(std::vector<ResolvedToken> tokens, const TextBox& text_box)
-    : _tokens(std::move(tokens))
-    , _font(text_box.font())
-    , _max_width(text_box.width())
-    , _text_size(text_box.textSize())
+TextPage PageSerializer::serialize(std::vector<ResolvedToken> tokens, const TextBox& text_box)
 {
-    if (!_tokens.empty()) {
-        const size_t assumed_size = (_tokens.size() / 8) + 1;
-        _lines.reserve(assumed_size);
+    PageSerializer serializer(text_box);
+    for (ResolvedToken& token : tokens) {
+        serializer.consume_token(std::move(token));
     }
+
+    return serializer.finish();
 }
 
-std::vector<Line> LineBreaker::run()
+PageSerializer::PageSerializer(const TextBox& text_box)
+    : _text_box(text_box)
+    , _cursor{0, text_box.cursor_y()}
+{}
+
+bool PageSerializer::consume_token(ResolvedToken token)
 {
-    for (ResolvedToken& token : _tokens) {
-        process_token(token);
+    if (page_full()) {
+        return false;
     }
 
-    if (!_current_line.empty()) {
-        _lines.push_back(std::move(_current_line));
-    }
+    const std::size_t token_bytes = token.token.bytes.size();
 
-    return std::move(_lines);
-}
-
-void LineBreaker::process_token(ResolvedToken& token)
-{
     if (token.token.kind == TokenKind::Newline) {
+        _current_line.consumed_bytes += token_bytes;
+        _consumed_bytes += token_bytes;
         push_current_line();
-        return;
+        return true;
     }
 
-    const std::size_t token_width = TextHelper::token_width(token, _font, _text_size);
+    const std::size_t token_width = TextHelper::token_width(token, _text_box);
     if (should_start_new_line(token_width)) {
         push_current_line();
+        if (page_full()) {
+            return false;
+        }
     }
 
+    _current_line.consumed_bytes += token_bytes;
+    _consumed_bytes += token_bytes;
 
     if (_current_line.empty() && token.token.kind == TokenKind::Space) {
-        return;
+        return true;
     }
 
-    _current_width += token_width;
-    _current_line.push_back(std::move(token));
+    _cursor.x += static_cast<int16_t>(token_width);
+    _current_line.tokens.push_back(std::move(token));
+    return true;
 }
 
-bool LineBreaker::should_start_new_line(const std::size_t token_width) const
+TextPage PageSerializer::finish()
 {
-    return !_current_line.empty() && _max_width > 0 && _current_width + token_width > _max_width;
+    if (!_current_line.empty() || _current_line.consumed_bytes > 0) {
+        push_current_line();
+    }
+
+    return TextPage{std::move(_lines), _consumed_bytes};
 }
 
-void LineBreaker::push_current_line()
+bool PageSerializer::page_full() const
+{
+    if (line_height() <= 0) {
+        return true;
+    }
+
+    return _cursor.y > _text_box.bottom();
+}
+
+int16_t PageSerializer::line_height() const
+{
+    const GFXfont* font = _text_box.font();
+    if (font == nullptr) {
+        return 0;
+    }
+
+    return static_cast<int16_t>(_text_box.textSize()) *
+           static_cast<int16_t>(font->yAdvance);
+}
+
+bool PageSerializer::should_start_new_line(const std::size_t token_width) const
+{
+    return !_current_line.empty() &&
+           _text_box.width() > 0 &&
+           static_cast<std::size_t>(_cursor.x) + token_width > static_cast<std::size_t>(_text_box.width());
+}
+
+void PageSerializer::push_current_line()
 {
     _lines.push_back(std::move(_current_line));
+    if (_cursor.x > 0) {
+        _cursor.y += line_height();
+    }
+
     _current_line = Line{};
-    _current_width = 0;
+    _cursor.x = 0;
 }

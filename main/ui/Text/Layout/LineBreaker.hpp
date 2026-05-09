@@ -1,34 +1,33 @@
 #pragma once
 
+#include "Display.hpp"
 #include "Text/Layout/TextToken.hpp"
 
 #include <cstddef>
 #include <cstdint>
-#include <gfxfont.h>
 
 class TextBox;
 
-class LineBreaker final {
+class PageSerializer final {
 public:
-    static std::vector<Line> break_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box);
+    static std::vector<Line> serialize_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box);
+    static TextPage serialize(std::vector<ResolvedToken> tokens, const TextBox& text_box);
+
+public:
+    explicit PageSerializer(const TextBox& text_box);
+    bool consume_token(ResolvedToken token);
+    TextPage finish();
 
 private:
-    LineBreaker(std::vector<ResolvedToken> tokens, const TextBox& text_box);
-
-private:
-    std::vector<Line> run();
-
-private:
-    void process_token(ResolvedToken& token);
+    bool page_full() const;
+    int16_t line_height() const;
     bool should_start_new_line(const std::size_t token_width) const;
     void push_current_line();
 
 private:
-    std::vector<ResolvedToken> _tokens;
+    const TextBox& _text_box;
     std::vector<Line> _lines;
     Line _current_line;
-    const GFXfont* _font;
-    std::size_t _max_width;
-    std::size_t _current_width = 0;
-    uint8_t _text_size;
+    Vector2 _cursor;
+    std::size_t _consumed_bytes = 0;
 };

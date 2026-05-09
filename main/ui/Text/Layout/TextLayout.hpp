@@ -15,4 +15,10 @@ public:
         Direction base_direction,
         const TextBox& text_box
     );
+
+    static TextPage build_page(
+        const std::vector<uint8_t>& serialized_bytes,
+        Direction base_direction,
+        const TextBox& text_box
+    );
 };
