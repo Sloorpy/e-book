@@ -1,8 +1,8 @@
 #include "Text/Layout/LineBreaker.hpp"
-
 #include "Text/Rendering/TextBox.hpp"
 #include "Text/Support/TextHelper.hpp"
 
+#include <algorithm>
 #include <utility>
 
 std::vector<Line> PageSerializer::serialize_lines(std::vector<ResolvedToken> tokens, const TextBox& text_box)
@@ -98,9 +98,40 @@ bool PageSerializer::should_start_new_line(const std::size_t token_width) const
 
 void PageSerializer::push_current_line()
 {
-    _lines.push_back(std::move(_current_line));
+    _lines.push_back(finalize_line(std::move(_current_line)));
     _cursor.y += line_height();
 
     _current_line = Line{};
     _cursor.x = 0;
+}
+
+Line PageSerializer::finalize_line(Line &&logical_line) const
+{
+    if (logical_line.empty()) {
+        return std::move(logical_line);
+    }
+
+    bool has_beginning = false;
+    size_t reverse_begin = 0;
+    for (size_t i = 0; i < logical_line.size(); ++i) {
+        const ResolvedToken& token = logical_line.tokens[i];
+
+        if (token.direction == Direction::LTR) {
+            if (!has_beginning) {
+                has_beginning = true;
+                reverse_begin = i;
+            }
+        } else if (has_beginning) {
+            auto begin = logical_line.tokens.begin();
+            std::reverse(begin + reverse_begin, begin + i);
+            has_beginning = false;
+        }
+    }
+
+    if (has_beginning) {
+        std::reverse(logical_line.tokens.begin() + reverse_begin,logical_line.tokens.end());
+        has_beginning = false;
+    }
+
+    return std::move(logical_line);
 }

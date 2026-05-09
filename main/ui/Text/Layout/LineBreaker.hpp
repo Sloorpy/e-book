@@ -23,6 +23,7 @@ private:
     int16_t line_height() const;
     bool should_start_new_line(const std::size_t token_width) const;
     void push_current_line();
+    Line finalize_line(Line&& logical_line) const;
 
 private:
     const TextBox& _text_box;
