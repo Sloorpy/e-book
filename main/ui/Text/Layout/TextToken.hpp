@@ -32,4 +32,15 @@ struct ResolvedToken final {
     Direction direction = Direction::LTR;
 };
 
-using Line = std::vector<ResolvedToken>;
+struct Line final {
+    std::vector<ResolvedToken> tokens;
+    std::size_t consumed_bytes = 0;
+
+    bool empty() const { return tokens.empty(); }
+    std::size_t size() const { return tokens.size(); }
+};
+
+struct TextPage final {
+    std::vector<Line> lines;
+    std::size_t consumed_bytes = 0;
+};
