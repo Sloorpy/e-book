@@ -116,7 +116,7 @@ Line PageSerializer::finalize_line(Line &&logical_line) const
     for (size_t i = 0; i < logical_line.size(); ++i) {
         const ResolvedToken& token = logical_line.tokens[i];
 
-        if (token.direction == Direction::LTR) {
+        if (token.direction == Direction::LTR && token.token.kind == TokenKind::EnglishWord) {
             if (!has_beginning) {
                 has_beginning = true;
                 reverse_begin = i;
