@@ -1,6 +1,5 @@
 #include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
-#include "Text/Legacy/BookString.hpp"
 #include "Text/Layout/TextLayout.hpp"
 #include "ScopedDisplayFont.hpp"
 #include <Fonts/hebEng5x7avia.h>
@@ -150,16 +149,13 @@ size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos
 
     ScopedDisplayFont display_font(*_display, _font);
 
-    std::vector<Line> lines = TextLayout::build_lines(str, Direction::RTL, *this);
+    TextPage page = build_page_layout(str);
 
-    for (const Line& line: lines) {
-        if (bottom_reached()) {
-            break;
-        }
-        write_layout_line(line, pos);
+    for (const Line& line: page.lines) {
+        write_line(line, pos);
     }
 
-    return str.size();
+    return page.consumed_bytes;
 }
 
 size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPosition pos)
@@ -167,24 +163,15 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPo
     if (_font == nullptr) {
         return 0;
     }
-    const GFXfont* old_font = _display->getFont();
-    _display->setFont(_font);
 
-    const size_t original_len = str.size();
-    const Vector2 original_cursor = _cursor;
+    ScopedDisplayFont display_font(*_display, _font);
 
-    BookString bs(str);
+    return build_page_layout(str).consumed_bytes;
+}
 
-    while (!bs.end() && !bottom_reached()) {
-        const LegacyLine line = bs.next_line(*this);
-        const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
-
-        next_line(pos, line_width);
-    }
-
-    _cursor = original_cursor;
-    _display->setFont(old_font);
-    return original_len - bs.remaining_bytes();
+TextPage TextBox::build_page_layout(const std::vector<uint8_t>& str) const
+{
+    return TextLayout::build_page(str, Direction::RTL, *this);
 }
 
 void TextBox::write_token(const ResolvedToken &token)
@@ -206,12 +193,12 @@ void TextBox::write_token(const ResolvedToken &token)
     }
 }
 
-void TextBox::write_layout_line(const Line &line, const InitialPosition pos)
+void TextBox::write_line(const Line &line, const InitialPosition pos)
 {
     const int16_t line_width = static_cast<int16_t>(TextHelper::line_width(line, *this));
     set_line_cursor(line_width, pos);
 
-    for (const ResolvedToken& token: line) {
+    for (const ResolvedToken& token: line.tokens) {
         write_token(token);
     }
 

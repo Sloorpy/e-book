@@ -49,8 +49,9 @@ public:
     int16_t width() const;
     
 private:
+    TextPage build_page_layout(const std::vector<uint8_t>& str) const;
     void write_token(const ResolvedToken& token);
-    void write_layout_line(const Line& line , const InitialPosition pos);
+    void write_line(const Line& line , const InitialPosition pos);
 
     void set_line_cursor(int16_t line_width, InitialPosition pos);
     int16_t glyph_advance(const GFXglyph& glyph) const;
