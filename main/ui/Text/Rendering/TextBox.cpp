@@ -142,14 +142,14 @@ void TextBox::next_line(InitialPosition pos, int16_t line_width)
     _cursor.y += line_height();
 }
 
-size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos) {
+size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos, const Direction base_direction) {
     if (_font == nullptr) {
         return 0;
     }
 
     ScopedDisplayFont display_font(*_display, _font);
 
-    TextPage page = build_page_layout(str);
+    TextPage page = build_page_layout(str, base_direction);
 
     for (const Line& line: page.lines) {
         write_line(line, pos);
@@ -166,12 +166,12 @@ size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPo
 
     ScopedDisplayFont display_font(*_display, _font);
 
-    return build_page_layout(str).consumed_bytes;
+    return build_page_layout(str, Direction::RTL).consumed_bytes;
 }
 
-TextPage TextBox::build_page_layout(const std::vector<uint8_t>& str) const
+TextPage TextBox::build_page_layout(const std::vector<uint8_t>& str, const Direction base_direction) const
 {
-    return TextLayout::build_page(str, Direction::RTL, *this);
+    return TextLayout::build_page(str, base_direction, *this);
 }
 
 void TextBox::write_token(const ResolvedToken &token)

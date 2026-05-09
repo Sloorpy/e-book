@@ -233,9 +233,9 @@ void Book::display_header()
     const uint32_t finished_percentage = (pages_read * 100) / (_current_chapter.pages.size() * _page_manager.chapter_count());
     printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
     
-    left_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left);
-    middle_tb.write(TextHelper::serialize_to_font_indices("|", middle_tb.font()), InitialPosition::Center);
-    right_tb.write(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right);
+    left_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left, Direction::LTR);
+    middle_tb.write(TextHelper::serialize_to_font_indices("|", middle_tb.font()), InitialPosition::Center, Direction::LTR);
+    right_tb.write(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right, Direction::LTR);
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)

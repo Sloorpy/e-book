@@ -31,7 +31,7 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t write(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
+    size_t write(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right,  const Direction base_direction = Direction::RTL);
     size_t next_print_size(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
     void next_line(InitialPosition pos = InitialPosition::Left, int16_t line_width = 0);
 
@@ -49,7 +49,7 @@ public:
     int16_t width() const;
     
 private:
-    TextPage build_page_layout(const std::vector<uint8_t>& str) const;
+    TextPage build_page_layout(const std::vector<uint8_t>& str, const Direction base_direction) const;
     void write_token(const ResolvedToken& token);
     void write_line(const Line& line , const InitialPosition pos);
 
