@@ -135,14 +135,17 @@ void TextBox::write_legacy_line(const LegacyLine &line, InitialPosition pos)
 
 void TextBox::next_line(InitialPosition pos, int16_t line_width)
 {
-    if (line_width == 0) {
-        return;
-    }
+    (void)pos;
+    (void)line_width;
 
     _cursor.y += line_height();
 }
 
-size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos, const Direction base_direction) {
+size_t TextBox::write(
+    const std::vector<uint8_t>& str,
+    const InitialPosition pos,
+    const Direction base_direction
+) {
     if (_font == nullptr) {
         return 0;
     }
@@ -158,18 +161,27 @@ size_t TextBox::write(const std::vector<uint8_t>& str, const InitialPosition pos
     return page.consumed_bytes;
 }
 
-size_t TextBox::next_print_size(const std::vector<uint8_t>& str, const InitialPosition pos)
+size_t TextBox::next_print_size(
+    const std::vector<uint8_t>& str,
+    const InitialPosition pos,
+    const Direction base_direction
+)
 {
+    (void)pos;
+
     if (_font == nullptr) {
         return 0;
     }
 
     ScopedDisplayFont display_font(*_display, _font);
 
-    return build_page_layout(str, Direction::RTL).consumed_bytes;
+    return build_page_layout(str, base_direction).consumed_bytes;
 }
 
-TextPage TextBox::build_page_layout(const std::vector<uint8_t>& str, const Direction base_direction) const
+TextPage TextBox::build_page_layout(
+    const std::vector<uint8_t>& str,
+    const Direction base_direction
+) const
 {
     return TextLayout::build_page(str, base_direction, *this);
 }
