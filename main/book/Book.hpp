@@ -4,6 +4,7 @@
 #include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string_view>
 #include <cstdint>
@@ -42,9 +43,6 @@ private:
     void no_more_pages();
 
 private:
-    size_t print_page_size(const std::vector<uint8_t> &text);
-
-private:
     void load_chapter_save();
     void first_chapter_title();
     void load_all_pages();
@@ -53,6 +51,7 @@ private:
 private:
     void draw_cover(const uint16_t x, const uint16_t y);
     void build_page_indices(size_t end_offset);
+    static size_t next_print_size_from(const std::vector<uint8_t>& pages, size_t page_start, TextBox& text_box);
     BookViewState handle_next_chapter();
     BookViewState handle_prev_chapter();
 
@@ -78,4 +77,5 @@ private:
     static constexpr uint16_t PAGE_HEIGHT = 400;
     static constexpr uint16_t BITMAP_WIDTH = 160;
     static constexpr uint16_t BITMAP_HEIGHT = 210;
+    static constexpr size_t INITIAL_PAGE_WINDOW_SIZE = 2048;
 };

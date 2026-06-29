@@ -17,6 +17,38 @@ static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 static constexpr Vector2 TEXT_POSITION{0, 18};
 static constexpr uint16_t TEXT_SIZE = 2;
 
+size_t Book::next_print_size_from(
+    const std::vector<uint8_t>& pages,
+    const size_t page_start,
+    TextBox& text_box
+) {
+    if (page_start >= pages.size()) {
+        return 0;
+    }
+
+    const size_t remaining_size = pages.size() - page_start;
+    size_t window_size = std::min(INITIAL_PAGE_WINDOW_SIZE, remaining_size);
+
+    size_t bytes_written = 0;
+    bool should_grow_window = false;
+
+    do {
+        const std::vector<uint8_t> page_window(
+            pages.begin() + page_start,
+            pages.begin() + page_start + window_size
+        );
+
+        bytes_written = text_box.next_print_size(page_window);
+        should_grow_window = bytes_written == window_size && window_size < remaining_size;
+
+        if (should_grow_window) {
+            window_size = std::min(window_size * 2, remaining_size);
+        }
+    } while (should_grow_window);
+
+    return bytes_written;
+}
+
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
     _page_manager(book_name),
     _current_chapter(BASE_CHAPTER),
@@ -80,11 +112,6 @@ void Book::no_more_pages()
     
     static constexpr std::string_view msg = "נגמרו העמודים :)";
     text_box.write(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
-}
-
-size_t Book::print_page_size(const std::vector<uint8_t>& text)
-{
-    return make_page_text_box().next_print_size(text);
 }
 
 void Book::display_current_page()
@@ -378,12 +405,8 @@ BookViewState Book::handle_next_chapter()
         page_start = _current_chapter.page_indicies.top().end;
     }
     
-    const std::vector<uint8_t> curr_text(
-        _current_chapter.pages.begin() + page_start,
-        _current_chapter.pages.end()
-    );
-
-    const size_t bytes_written = print_page_size(curr_text);   
+    TextBox page_text_box = make_page_text_box();
+    const size_t bytes_written = Book::next_print_size_from(_current_chapter.pages, page_start, page_text_box);
     if (bytes_written == 0) {
         throw std::runtime_error("Tried to get print page size for `next_page` but got size of 0");
     }
@@ -421,12 +444,7 @@ void Book::build_page_indices(size_t end_offset)
     while (offset < end_offset) {
         const size_t start_offset = offset;
 
-        const std::vector<uint8_t> page(
-            _current_chapter.pages.begin() + offset,
-            _current_chapter.pages.end()
-        );
-
-        const size_t page_size = temp_tb.next_print_size(page);
+        const size_t page_size = Book::next_print_size_from(_current_chapter.pages, offset, temp_tb);
         if (page_size == 0) {
             break;
         }
