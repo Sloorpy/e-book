@@ -1,12 +1,12 @@
-#include "PageManager.hpp"
+#include "BookFs.hpp"
 #include "Text/Support/TextHelper.hpp"
 #include <esp_log.h>
 #include <string>
 
-static constexpr char TAG[] = "PageManager";
+static constexpr char TAG[] = "BookFs";
 
 
-PageManager::PageManager(const std::string_view &book_name) :
+BookFs::BookFs(const std::string_view &book_name) :
     _book_name(book_name),
     _chapters_count(0)
 {
@@ -14,7 +14,7 @@ PageManager::PageManager(const std::string_view &book_name) :
 }
 
 
-std::string PageManager::get_title() const
+std::string BookFs::get_title() const
 {
     const std::string data = File(book_file_path("cover"), "r").read_all();
     size_t index = data.find('\n');
@@ -27,7 +27,7 @@ std::string PageManager::get_title() const
     return data.substr(0, index);
 }
 
-std::string PageManager::get_author() const
+std::string BookFs::get_author() const
 {
     const std::string data = File(book_file_path("cover"), "r").read_all();
     size_t index = data.find('\n');
@@ -40,12 +40,12 @@ std::string PageManager::get_author() const
     return data.substr(index + 1);
 }
 
-std::string PageManager::get_chapter_title(const uint16_t chapter_num) const
+std::string BookFs::get_chapter_title(const uint16_t chapter_num) const
 {
     return File(chapter_file_path(chapter_num, "chapter"), "r").read_all();
 }
 
-uint16_t PageManager::chapter_count() const
+uint16_t BookFs::chapter_count() const
 {
     if (_chapters_count > 0) {
         return _chapters_count;
@@ -72,7 +72,7 @@ uint16_t PageManager::chapter_count() const
     return static_cast<uint16_t>(num);
 }
 
-StateInfo PageManager::load_state(const uint16_t state_num)
+StateInfo BookFs::load_state(const uint16_t state_num)
 {
     const std::string path = book_file_path("state_" + std::to_string(state_num));
     std::string data;
@@ -105,14 +105,14 @@ StateInfo PageManager::load_state(const uint16_t state_num)
     };
 }
 
-void PageManager::save_state(const StateInfo state, const uint16_t state_num)
+void BookFs::save_state(const StateInfo state, const uint16_t state_num)
 {
     const std::string state_path = book_file_path("state_" + std::to_string(state_num));
     const std::string data = std::to_string(state.chapter_num) + '\n' + std::to_string(state.index);
     File(state_path, "w").write(data);
 }
 
-std::vector<uint8_t> PageManager::cover_bitmap()
+std::vector<uint8_t> BookFs::cover_bitmap()
 {
     const std::string cover_bin_path = book_file_path("cover.bin");
     try {
@@ -123,7 +123,7 @@ std::vector<uint8_t> PageManager::cover_bitmap()
     }
 }
 
-std::string PageManager::book_root_path() const
+std::string BookFs::book_root_path() const
 {
     std::string path;
     path.reserve(6 + _book_name.size() + 1);
@@ -133,14 +133,14 @@ std::string PageManager::book_root_path() const
     return path;
 }
 
-std::string PageManager::book_file_path(const std::string_view& filename) const
+std::string BookFs::book_file_path(const std::string_view& filename) const
 {
     std::string path = book_root_path();
     path += filename;
     return path;
 }
 
-std::string PageManager::chapter_root_path(uint16_t chapter_num) const
+std::string BookFs::chapter_root_path(uint16_t chapter_num) const
 {
     std::string path = book_root_path();
     path += std::to_string(chapter_num);
@@ -148,14 +148,14 @@ std::string PageManager::chapter_root_path(uint16_t chapter_num) const
     return path;
 }
 
-std::string PageManager::chapter_file_path(uint16_t chapter_num, const std::string_view& filename) const
+std::string BookFs::chapter_file_path(uint16_t chapter_num, const std::string_view& filename) const
 {
     std::string path = chapter_root_path(chapter_num);
     path += filename;
     return path;
 }
 
-Chapter PageManager::load_chapter(const uint16_t chapter_num, const GFXfont* font)
+Chapter BookFs::load_chapter(const uint16_t chapter_num, const GFXfont* font)
 {
     if (chapter_num > chapter_count())
     {

@@ -1,6 +1,6 @@
 #pragma once
 #include "File.hpp"
-#include "PageManager.hpp"
+#include "BookFs.hpp"
 #include "Text/Rendering/TextBox.hpp"
 #include "Display.hpp"
 
@@ -65,7 +65,7 @@ private:
     StateInfo current_state() const;
 
 private:
-    PageManager _page_manager;
+    BookFs _page_manager;
     Chapter _current_chapter;
     BookViewState _view_state;
 

@@ -27,9 +27,9 @@ struct StateInfo final {
     size_t index;
 };
 
-class PageManager final {
+class BookFs final {
 public:
-    explicit PageManager(const std::string_view& book_name);
+    explicit BookFs(const std::string_view& book_name);
 
 public:
     std::string get_title() const;

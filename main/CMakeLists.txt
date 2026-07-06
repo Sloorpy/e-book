@@ -5,7 +5,7 @@ idf_component_register(SRCS
     "system/SDManager.cpp"
     "system/SPI.cpp"
     "book/Book.cpp"
-    "book/PageManager.cpp"
+    "book/BookFs.cpp"
     "ui/Text/Legacy/BookString.cpp"
     "ui/Text/Legacy/Word.cpp"
     "ui/Text/Layout/BidiResolver.cpp"
