@@ -64,11 +64,13 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
     host.max_freq_khz = SDMMC_FREQ_PROBING;
+    host.command_timeout_ms = 10000;
 
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
     host.slot = static_cast<int>(spi->get_host());
     slot_config.gpio_cs = PIN_SD_CS;
     slot_config.host_id = static_cast<spi_host_device_t>(host.slot);
+    slot_config.wait_for_miso = 127;
 
     gpio_set_level(PIN_SD_CS, 1);
     gpio_set_direction(PIN_SD_CS, GPIO_MODE_OUTPUT);
