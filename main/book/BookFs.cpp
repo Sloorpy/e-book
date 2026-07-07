@@ -176,7 +176,7 @@ std::string BookFs::chapter_file_path(uint16_t chapter_num, const std::string_vi
 
 Chapter BookFs::load_chapter(const uint16_t chapter_num, const GFXfont* font)
 {
-    if (chapter_num > chapter_count())
+    if (chapter_num > chapter_count() || chapter_num == 0)
     {
         throw std::runtime_error("Error: Tried to get invalid chapter");
     }
