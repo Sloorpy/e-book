@@ -103,6 +103,29 @@ void File::seek(size_t position) {
     }
 }
 
+uint64_t File::size()
+{
+    const long initial_pos = ftell(_fd);
+    if (initial_pos < 0) {
+        throw std::runtime_error("Failed to get file position");
+    }
+
+    if (fseek(_fd, 0, SEEK_END) != 0) {
+        throw std::runtime_error("Failed to seek file end");
+    }    
+    
+    const long file_size = ftell(_fd);
+    if (file_size < 0) {
+        throw std::runtime_error("Failed to get file size");
+    }
+    
+    if (fseek(_fd, initial_pos, SEEK_SET) != 0) {
+        throw std::runtime_error("Failed to restore file position");
+    }
+
+    return static_cast<uint64_t>(file_size);
+}
+
 FILE *File::open_file(const std::string_view &filename, const std::string mode)
 {
     const std::string file_path = std::string(SDManager::instance().get_base_path()) + "/" + std::string(filename);
