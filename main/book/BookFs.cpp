@@ -45,6 +45,25 @@ std::string BookFs::get_chapter_title(const uint16_t chapter_num) const
     return File(chapter_file_path(chapter_num, "chapter"), "r").read_all();
 }
 
+std::vector<uint8_t> BookFs::read_page(const uint16_t chapter_num, const size_t buffer_size, const uint64_t offset)
+{
+    if (chapter_num == 0 || chapter_num > chapter_count()) {
+        throw std::runtime_error("Invalid BookFs::read_page input");
+    }
+    const std::string chapter_path = chapter_file_path(chapter_num, "pages");
+    File file(chapter_path, "rb");
+    const uint64_t file_size = file.size();
+
+    if (offset >= file_size) {
+        return {};
+    }
+
+    const size_t bytes_left = static_cast<size_t>(file_size - offset);
+    const size_t read_size = MIN(bytes_left, buffer_size);
+    file.seek(static_cast<size_t>(offset));
+    return file.read_bytes(read_size);
+}
+
 uint16_t BookFs::chapter_count() const
 {
     if (_chapters_count > 0) {

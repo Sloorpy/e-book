@@ -35,6 +35,7 @@ public:
     std::string get_title() const;
     std::string get_author() const;
     std::string get_chapter_title(const uint16_t chapter_num) const;
+    std::vector<uint8_t> read_page(const uint16_t chapter_num, const size_t buffer_size, const uint64_t offset = 0);
 
     Chapter load_chapter(const uint16_t chapter_num, const GFXfont* font);
     uint16_t chapter_count() const;
