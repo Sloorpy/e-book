@@ -2,6 +2,7 @@
 #include <esp_log.h>
 #include <stdexcept>
 #include <string>
+#include <climits>
 
 File::File(const std::string_view& filename, const std::string mode) :  
     _fd(open_file(filename, mode)) 
@@ -93,12 +94,15 @@ void File::write(const std::string &txt)
     }
 }
 
-void File::seek(size_t position) {
-    int result = fseek(_fd, static_cast<long>(position), SEEK_SET);
-    
-    if (result != 0)
-    {
-        ESP_LOGE(LOG_TAG.data(), "Failed to seek to %zu", position);
+void File::seek(uint64_t position)
+{
+    if (position > static_cast<uint64_t>(LONG_MAX)) {
+        throw std::runtime_error("Seek position is too large");
+    }
+
+    const int result = fseek(_fd, static_cast<long>(position), SEEK_SET);
+    if (result != 0) {
+        ESP_LOGE(LOG_TAG.data(), "Failed to seek to %llu", position);
         throw std::runtime_error("Failed to seek file");
     }
 }
