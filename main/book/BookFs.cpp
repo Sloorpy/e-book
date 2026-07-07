@@ -64,6 +64,16 @@ std::vector<uint8_t> BookFs::read_page(const uint16_t chapter_num, const size_t 
     return file.read_bytes(read_size);
 }
 
+uint64_t BookFs::chapter_size(const uint16_t chapter_num)
+{
+    if (chapter_num == 0 || chapter_num > chapter_count()) {
+        throw std::runtime_error("Invalid BookFs::read_page input");
+    }
+    const std::string chapter_path = chapter_file_path(chapter_num, "pages");
+    File file(chapter_path, "rb");
+    return file.size();
+}
+
 uint16_t BookFs::chapter_count() const
 {
     if (_chapters_count > 0) {
