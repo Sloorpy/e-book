@@ -10,13 +10,13 @@ public:
 
 public:
     std::string read_all();
-    std::string read(const uint32_t size);
+    std::string read(const size_t size);
     std::vector<uint8_t> read_all_bytes();
-    std::vector<uint8_t> read_bytes(const uint32_t size);
+    std::vector<uint8_t> read_bytes(const size_t size);
     void write(const std::string& txt);
     void seek(size_t position);
     uint64_t size();
-    
+
 private:
     FILE* open_file(const std::string_view& filename, const std::string mode);
 

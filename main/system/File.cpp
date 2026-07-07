@@ -21,7 +21,7 @@ std::string File::read_all()
     return std::string(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 }
 
-std::string File::read(const uint32_t size)
+std::string File::read(const size_t size)
 {
     std::vector<uint8_t> buffer = read_bytes(size);
     return std::string(reinterpret_cast<const char*>(buffer.data()), buffer.size());
@@ -58,7 +58,7 @@ std::vector<uint8_t> File::read_all_bytes()
     return output;
 }
 
-std::vector<uint8_t> File::read_bytes(const uint32_t size)
+std::vector<uint8_t> File::read_bytes(const size_t size)
 {
     std::vector<uint8_t> buffer(size);
 
