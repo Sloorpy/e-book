@@ -19,6 +19,7 @@ idf_component_register(SRCS
     "states/ProgramState.cpp"
     "states/BookState.cpp"
     "system/PageBuffer.cpp"
+    "book/PageIter.cpp"
     INCLUDE_DIRS "." "system" "ui" "book"
     REQUIRES Adafruit-GFX esp_driver_spi fatfs sdmmc
     PRIV_REQUIRES esp_timer
