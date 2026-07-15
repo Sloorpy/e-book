@@ -11,8 +11,8 @@
 #include <gfxfont.h>
 
 struct PageRange final {
-    size_t start;
-    size_t end;
+    uint32_t start;
+    uint32_t end;
 };
 
 struct Chapter final {
@@ -24,7 +24,7 @@ struct Chapter final {
 
 struct StateInfo final {
     uint16_t chapter_num;
-    size_t index;
+    uint32_t index;
 };
 
 class BookFs final {

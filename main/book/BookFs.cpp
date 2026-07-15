@@ -1,5 +1,6 @@
 #include "BookFs.hpp"
 #include "Text/Support/TextHelper.hpp"
+#include <algorithm>
 #include <esp_log.h>
 #include <string>
 
@@ -58,9 +59,11 @@ std::vector<uint8_t> BookFs::read_page(const uint16_t chapter_num, const size_t 
         return {};
     }
 
-    const size_t bytes_left = static_cast<size_t>(file_size - offset);
-    const size_t read_size = MIN(bytes_left, buffer_size);
-    file.seek(static_cast<size_t>(offset));
+    const uint64_t bytes_left = file_size - offset;
+    const size_t read_size = static_cast<size_t>(
+        std::min<uint64_t>(bytes_left, buffer_size)
+    );
+    file.seek(offset);
     return file.read_bytes(read_size);
 }
 
@@ -124,7 +127,7 @@ StateInfo BookFs::load_state(const uint16_t state_num)
     const std::string chapter_num_str = data.substr(0, split_offset);
     const std::string index_str = data.substr(split_offset + 1);
     uint16_t chapter_val = 0;
-    size_t index = 0;
+    uint32_t index = 0;
     std::from_chars(chapter_num_str.c_str(), chapter_num_str.c_str() + chapter_num_str.size(), chapter_val);
     std::from_chars(index_str.c_str(), index_str.c_str() + index_str.size(), index);
 

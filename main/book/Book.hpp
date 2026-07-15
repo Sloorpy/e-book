@@ -50,8 +50,8 @@ private:
 
 private:
     void draw_cover(const uint16_t x, const uint16_t y);
-    void build_page_indices(size_t end_offset);
-    static size_t next_print_size_from(const std::vector<uint8_t>& pages, size_t page_start, TextBox& text_box);
+    void build_page_indices(uint32_t end_offset);
+    static uint32_t next_print_size_from(const std::vector<uint8_t>& pages, uint32_t page_start, TextBox& text_box);
     BookViewState handle_next_chapter();
     BookViewState handle_prev_chapter();
 

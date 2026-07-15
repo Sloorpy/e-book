@@ -5,8 +5,8 @@
 #include <memory>
 
 struct PageRange final {
-    size_t start;
-    size_t end;
+    uint32_t start;
+    uint32_t end;
 };
 
 class PageIter final {

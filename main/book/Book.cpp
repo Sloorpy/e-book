@@ -17,9 +17,9 @@ static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 static constexpr Vector2 TEXT_POSITION{0, 18};
 static constexpr uint16_t TEXT_SIZE = 2;
 
-size_t Book::next_print_size_from(
+uint32_t Book::next_print_size_from(
     const std::vector<uint8_t>& pages,
-    const size_t page_start,
+    const uint32_t page_start,
     TextBox& text_box
 ) {
     if (page_start >= pages.size()) {
@@ -46,7 +46,7 @@ size_t Book::next_print_size_from(
         }
     } while (should_grow_window);
 
-    return bytes_written;
+    return static_cast<uint32_t>(bytes_written);
 }
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
@@ -147,7 +147,7 @@ void Book::first_chapter_title()
 void Book::load_all_pages()
 {
     if (_current_chapter.page_indicies.empty() && _current_chapter.num > 0) {
-        build_page_indices(_current_chapter.pages.size());
+        build_page_indices(static_cast<uint32_t>(_current_chapter.pages.size()));
     }
 
     if (!_current_chapter.page_indicies.empty()) {
@@ -168,7 +168,7 @@ void Book::prev_chapter_last_page()
 
     const uint16_t prev_chapter = _current_chapter.num - 1;
     _current_chapter = _page_manager.load_chapter(prev_chapter, get_font());
-    build_page_indices(_current_chapter.pages.size());
+    build_page_indices(static_cast<uint32_t>(_current_chapter.pages.size()));
 
     if (!_current_chapter.page_indicies.empty()) {
         _view_state = BookViewState::PAGE;
@@ -308,7 +308,8 @@ void Book::load_chapter_save()
     }
 
     _current_chapter = _page_manager.load_chapter(chapter_num, get_font());
-    const size_t chapter_offset =  std::min(state.index, _current_chapter.pages.size());
+    const uint32_t chapter_size = static_cast<uint32_t>(_current_chapter.pages.size());
+    const uint32_t chapter_offset = std::min(state.index, chapter_size);
     
     if (_current_chapter.num >= _page_manager.chapter_count() && chapter_offset >= _current_chapter.pages.size()) {
         _view_state = BookViewState::FINISHED;
@@ -400,13 +401,13 @@ BookViewState Book::handle_next_chapter()
         return BookViewState::CHAPTER_TITLE;
     }
     
-    size_t page_start = 0;
+    uint32_t page_start = 0;
     if (!_current_chapter.page_indicies.empty()) {
         page_start = _current_chapter.page_indicies.top().end;
     }
     
     TextBox page_text_box = make_page_text_box();
-    const size_t bytes_written = Book::next_print_size_from(_current_chapter.pages, page_start, page_text_box);
+    const uint32_t bytes_written = Book::next_print_size_from(_current_chapter.pages, page_start, page_text_box);
     if (bytes_written == 0) {
         throw std::runtime_error("Tried to get print page size for `next_page` but got size of 0");
     }
@@ -431,20 +432,21 @@ BookViewState Book::handle_prev_chapter()
     return BookViewState::PAGE;
 }
 
-void Book::build_page_indices(size_t end_offset)
+void Book::build_page_indices(uint32_t end_offset)
 {
-    if (end_offset >= _current_chapter.pages.size()) {
-        end_offset = _current_chapter.pages.size();
-    }
+    end_offset = std::min(
+        end_offset,
+        static_cast<uint32_t>(_current_chapter.pages.size())
+    );
 
     _current_chapter.page_indicies = std::stack<PageRange>();
  
-    size_t offset = 0;
+    uint32_t offset = 0;
     TextBox temp_tb = make_page_text_box();
     while (offset < end_offset) {
-        const size_t start_offset = offset;
+        const uint32_t start_offset = offset;
 
-        const size_t page_size = Book::next_print_size_from(_current_chapter.pages, offset, temp_tb);
+        const uint32_t page_size = Book::next_print_size_from(_current_chapter.pages, offset, temp_tb);
         if (page_size == 0) {
             break;
         }
