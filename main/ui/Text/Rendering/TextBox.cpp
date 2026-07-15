@@ -8,6 +8,7 @@
 #include <cstring>
 #include <utility>
 #include <vector>
+#include "TextBox.hpp"
 
 TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t left,
@@ -29,7 +30,21 @@ TextBox::TextBox(std::shared_ptr<Display> display,
     resetCursor();
 }
 
-void TextBox::setCursor(Vector2 pos) {
+TextBox::TextBox(uint16_t width, uint16_t height, const GFXfont *font, uint16_t text_size) :
+    _display(nullptr),
+    _font(font),
+    _left(0),
+    _top(0),
+    _right(width),
+    _bottom(height),
+    _cursor{0, 0},
+    _textsize(text_size),
+    _text_color(static_cast<uint8_t>(Color::BLACK))
+{
+}
+
+void TextBox::setCursor(Vector2 pos)
+{
     _cursor = pos;
 }
 
@@ -57,6 +72,10 @@ void TextBox::setTextColor(uint8_t color) {
 
 void TextBox::draw_char(const Vector2 position, const char letter)
 {
+    if (!_display.get()) {
+        return;
+    }
+
     _display->drawChar(
         position.x,
         position.y,
@@ -150,7 +169,11 @@ size_t TextBox::write(
         return 0;
     }
 
-    ScopedDisplayFont display_font(*_display, _font);
+    std::unique_ptr<ScopedDisplayFont> display_font = nullptr;
+
+    if (_display.get()) {
+        display_font = std::make_unique<ScopedDisplayFont>(*_display, _font);
+    }
 
     TextPage page = build_page_layout(str, base_direction);
 
@@ -173,7 +196,11 @@ size_t TextBox::next_print_size(
         return 0;
     }
 
-    ScopedDisplayFont display_font(*_display, _font);
+    std::unique_ptr<ScopedDisplayFont> display_font = nullptr;
+
+    if (_display.get()) {
+        display_font = std::make_unique<ScopedDisplayFont>(*_display, _font);
+    }
 
     return build_page_layout(str, base_direction).consumed_bytes;
 }

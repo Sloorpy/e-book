@@ -21,6 +21,9 @@ public:
            );
 
 public:
+    TextBox(uint16_t width, uint16_t height, const GFXfont* font, uint16_t text_size = 1);
+
+public:
     void setCursor(Vector2 pos);
     void setCursor(int16_t x, int16_t y);
     void resetCursor();
