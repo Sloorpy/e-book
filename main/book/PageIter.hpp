@@ -1,17 +1,13 @@
 #pragma once
 #include "PageBuffer.hpp"
+#include "Text/Rendering/TextBox.hpp"
 #include "ui/Text/Layout/TextToken.hpp"
 
 #include <memory>
 
-struct PageRange final {
-    uint32_t start;
-    uint32_t end;
-};
-
 class PageIter final {
 public:
-    explicit PageIter(std::unique_ptr<PageBuffer> buffer);
+    explicit PageIter(std::unique_ptr<PageBuffer> buffer, std::unique_ptr<TextBox> tb_mock, const Direction direction);
     ~PageIter() = default;
 
 public: 
@@ -23,10 +19,12 @@ public:
     TextPage prev();
 
 private:
-    static std::vector<PageRange> initialize_page_indecies(PageBuffer& buffer);
+    static std::vector<PageRange> initialize_page_indecies(PageBuffer& buffer, TextBox& tb_mock, const Direction direction);
 
 private:
     size_t _current_page;
     std::vector<PageRange> _page_indecies;
     const std::unique_ptr<PageBuffer> _buffer;
+    const std::unique_ptr<TextBox> _tb_mock;
+    const Direction _direction;
 };
