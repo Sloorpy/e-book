@@ -4,6 +4,7 @@
 #include "Fonts/hebEng5x7avia.h"
 #include "Fonts/FreeMonoBold9pt7b.h"
 #include "Display.hpp"
+#include "Config.hpp"
 
 #include <string_view>
 #include <esp_log.h>
@@ -27,7 +28,7 @@ uint32_t Book::next_print_size_from(
     }
 
     const size_t remaining_size = pages.size() - page_start;
-    size_t window_size = std::min(INITIAL_PAGE_WINDOW_SIZE, remaining_size);
+    size_t window_size = std::min(Config::INITIAL_PAGE_WINDOW_SIZE, remaining_size);
 
     size_t bytes_written = 0;
     bool should_grow_window = false;
@@ -93,13 +94,13 @@ void Book::display_title()
     const std::string title = _page_manager.get_title();
     const std::string author = _page_manager.get_author();
     
-    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);
-    TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, TITLE_TEXT_SIZE);
+    TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
 
     title_tb.write(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
     author_tb.write(TextHelper::serialize_to_font_indices(author, get_font()));
     
-    static const Vector2 bitmap_position{(PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2, 150};
+    static const Vector2 bitmap_position{(Config::PAGE_WIDTH - static_cast<int16_t>(Config::BITMAP_WIDTH)) / 2, 150};
     draw_cover(bitmap_position.x, bitmap_position.y);
 }
 
@@ -108,7 +109,7 @@ void Book::no_more_pages()
     static constexpr Vector2 TEXT_POSITION{0, 50};
     static constexpr uint16_t TEXT_SIZE = 3;
 
-    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
+    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, TEXT_SIZE);
     
     static constexpr std::string_view msg = "נגמרו העמודים :)";
     text_box.write(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
@@ -240,8 +241,8 @@ void Book::display_chapter_title()
     const std::string chapter_num_str = std::to_string(_current_chapter.num);
     const std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
 
-    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
-    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);    
+    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, TITLE_TEXT_SIZE);    
 
     number_tb.write(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center);
     title_tb.write(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center);
@@ -249,7 +250,7 @@ void Book::display_chapter_title()
 
 void Book::display_header()
 {
-    _display->drawLine(0, TEXT_POSITION.y, PAGE_WIDTH, TEXT_POSITION.y, 0);
+    _display->drawLine(0, TEXT_POSITION.y, Config::PAGE_WIDTH, TEXT_POSITION.y, 0);
     const uint16_t part_width =  _display->width() / 5;
     TextBox left_tb = make_header_text_box(0, part_width * 2);
     TextBox middle_tb = make_header_text_box(part_width * 2, TEXT_POSITION.x + part_width * 3);
@@ -272,8 +273,8 @@ void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
         return;
     }
     
-    _display->drawRect(start_x, start_y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
-    _display->drawBitmap(start_x, start_y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
+    _display->drawRect(start_x, start_y, Config::BITMAP_WIDTH, Config::BITMAP_HEIGHT, 0);
+    _display->drawBitmap(start_x, start_y, bitmap.data(), Config::BITMAP_WIDTH, Config::BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
 }
 
 bool Book::has_next_page() const
@@ -346,8 +347,8 @@ TextBox Book::make_page_text_box() const
         _display,
         0,
         TEXT_POSITION.y + SPACE_FROM_BORDER,
-        PAGE_WIDTH, 
-        PAGE_HEIGHT, 
+        Config::PAGE_WIDTH, 
+        Config::PAGE_HEIGHT, 
         get_font(),
         TEXT_SIZE
     );
