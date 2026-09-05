@@ -14,13 +14,13 @@ SDManager& SDManager::instance()
     return *_instance;
 }
 
-void SDManager::init(std::shared_ptr<SPI> spi, const std::string_view& base_path)
+void SDManager::init(const std::string_view& base_path)
 {
     if (_instance)
     {
         throw std::runtime_error("SDManager already initialized");
     }
-    _instance = new SDManager(spi, base_path);
+    _instance = new SDManager(SPI::create_sd_spi(), base_path);
 }
 
 SDManager::SDManager(std::shared_ptr<SPI> spi, const std::string_view& base_path) :
@@ -51,10 +51,9 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
 {
     static constexpr uint8_t MOUNT_RETRY_COUNT = 3;
     static constexpr uint32_t RETRY_DELAY_MS = 250;
-    static constexpr gpio_num_t PIN_SD_MOSI = GPIO_NUM_23;
-    static constexpr gpio_num_t PIN_SD_MISO = GPIO_NUM_19;
-    static constexpr gpio_num_t PIN_SD_CLK = GPIO_NUM_18;
-    static constexpr gpio_num_t PIN_DISPLAY_CS = GPIO_NUM_5;
+    static constexpr gpio_num_t PIN_SD_MOSI = GPIO_NUM_13;
+    static constexpr gpio_num_t PIN_SD_MISO = GPIO_NUM_33;
+    static constexpr gpio_num_t PIN_SD_CLK = GPIO_NUM_14;
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = false,
@@ -74,8 +73,6 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
 
     gpio_set_level(PIN_SD_CS, 1);
     gpio_set_direction(PIN_SD_CS, GPIO_MODE_OUTPUT);
-    gpio_set_level(PIN_DISPLAY_CS, 1);
-    gpio_set_direction(PIN_DISPLAY_CS, GPIO_MODE_OUTPUT);
 
     gpio_set_pull_mode(PIN_SD_CS, GPIO_PULLUP_ONLY);
     gpio_set_pull_mode(PIN_SD_MOSI, GPIO_PULLUP_ONLY);
@@ -83,11 +80,10 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
     gpio_set_pull_mode(PIN_SD_CLK, GPIO_PULLUP_ONLY);
 
     ESP_LOGI(LOG_TAG.data(),
-             "SD mount setup host=%d freq=%dKHz sd_cs=%d display_cs=%d",
+             "SD mount setup host=%d freq=%dKHz sd_cs=%d",
              host.slot,
              host.max_freq_khz,
-             PIN_SD_CS,
-             PIN_DISPLAY_CS);
+             PIN_SD_CS);
 
     sdmmc_card_t *card = nullptr;
 

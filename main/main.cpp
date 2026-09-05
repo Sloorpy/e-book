@@ -18,8 +18,6 @@
 static constexpr std::string_view MAIN_TAG = "Main";
 static constexpr std::string_view BOOK_NAME = "percy_2_heb";
 
-std::shared_ptr<SPI> g_spi = nullptr;
-
 extern "C" void app_main(void)
 {   
     // Adafruit_GFX_Button ui_button1{};
@@ -27,14 +25,13 @@ extern "C" void app_main(void)
     // ui_button1.drawButton();
     try 
     {
-        g_spi = std::make_shared<SPI>();
-        SDManager::init(g_spi);
+        SDManager::init();
         std::unique_ptr<ProgramState> current_state = nullptr;
-        current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(g_spi));
+        current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(SPI::create_display_spi()));
 
         current_state->main();
         
-        Button button(GPIO_NUM_22);
+        Button button(GPIO_NUM_27);
         ESP_ERROR_CHECK(button.init());
         
         static const char* TAG = "Button";
