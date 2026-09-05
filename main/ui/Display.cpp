@@ -3,6 +3,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+static constexpr char TAG[] = "Display";
+
 Display::Display(std::shared_ptr<SPI> spi) :
     GFXcanvas1(_WIDTH, _HEIGHT),
     _spi(spi),
@@ -43,20 +45,26 @@ spi_device_handle_t Display::initialize_hardware()
 }
 
 void Display::reset() {
-    gpio_set_level((gpio_num_t)PIN_RST, 0);
+    gpio_set_level(PIN_RST, 0);
     vTaskDelay(pdMS_TO_TICKS(10));
-    gpio_set_level((gpio_num_t)PIN_RST, 1);
-    vTaskDelay(pdMS_TO_TICKS(10));
+    gpio_set_level(PIN_RST, 1);
+    vTaskDelay(pdMS_TO_TICKS(20));
 }
 
 void Display::waitBusy() {
-    int count = 0;
-    while (gpio_get_level((gpio_num_t)PIN_BUSY) != 0) {
-        if (count++ > 2000) {
-            printf("waitBusy timeout\n");
-            break;
+    constexpr TickType_t POLL_DELAY = pdMS_TO_TICKS(10);
+    constexpr uint16_t MAX_POLLS = 1500;
+    
+    constexpr TickType_t COMMAND_SETTLE_DELAY = pdMS_TO_TICKS(100);
+    vTaskDelay(COMMAND_SETTLE_DELAY);
+
+    uint16_t polls = 0;
+    while (gpio_get_level(PIN_BUSY) != 0) {
+        if (++polls >= MAX_POLLS) {
+            ESP_LOGE(TAG, "Display BUSY timeout");
+            return;
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(POLL_DELAY);
     }
 }
 
