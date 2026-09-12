@@ -1,5 +1,7 @@
 #include "SPI.hpp"
 #include <esp_err.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 SPI::SPI(const spi_host_device_t host,
          const gpio_num_t mosi,
@@ -44,7 +46,17 @@ std::unique_ptr<SPI> SPI::create_display_spi()
 
 std::unique_ptr<SPI> SPI::create_sd_spi()
 {
-    return std::make_unique<SPI>(SPI3_HOST, GPIO_NUM_13, GPIO_NUM_33, GPIO_NUM_14);
+    static constexpr gpio_num_t PIN_SD_MOSI = GPIO_NUM_13;
+    static constexpr gpio_num_t PIN_SD_MISO = GPIO_NUM_33;
+    static constexpr gpio_num_t PIN_SD_CLK = GPIO_NUM_14;
+    static constexpr TickType_t SIGNAL_SETTLE_DELAY = pdMS_TO_TICKS(10);
+
+    gpio_set_pull_mode(PIN_SD_MOSI, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(PIN_SD_MISO, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(PIN_SD_CLK, GPIO_PULLUP_ONLY);
+    vTaskDelay(SIGNAL_SETTLE_DELAY);
+
+    return std::make_unique<SPI>(SPI3_HOST, PIN_SD_MOSI, PIN_SD_MISO, PIN_SD_CLK);
 }
 
 spi_device_handle_t SPI::add_device(const spi_device_interface_config_t& device_conf)

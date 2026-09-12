@@ -20,6 +20,11 @@ void SDManager::init(const std::string_view& base_path)
     {
         throw std::runtime_error("SDManager already initialized");
     }
+
+    gpio_set_direction(PIN_SD_CS, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_SD_CS, 1);
+    gpio_set_pull_mode(PIN_SD_CS, GPIO_PULLUP_ONLY);
+
     _instance = new SDManager(SPI::create_sd_spi(), base_path);
 }
 
@@ -50,10 +55,7 @@ std::string_view SDManager::get_base_path() const
 sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::string_view& base_path)
 {
     static constexpr uint8_t MOUNT_RETRY_COUNT = 3;
-    static constexpr uint32_t RETRY_DELAY_MS = 250;
-    static constexpr gpio_num_t PIN_SD_MOSI = GPIO_NUM_13;
-    static constexpr gpio_num_t PIN_SD_MISO = GPIO_NUM_33;
-    static constexpr gpio_num_t PIN_SD_CLK = GPIO_NUM_14;
+    static constexpr uint32_t RETRY_DELAY_MS = 1000;
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = false,
@@ -70,14 +72,6 @@ sdmmc_card_t *SDManager::mount_sd_card(std::shared_ptr<SPI> spi, const std::stri
     slot_config.gpio_cs = PIN_SD_CS;
     slot_config.host_id = static_cast<spi_host_device_t>(host.slot);
     slot_config.wait_for_miso = 127;
-
-    gpio_set_level(PIN_SD_CS, 1);
-    gpio_set_direction(PIN_SD_CS, GPIO_MODE_OUTPUT);
-
-    gpio_set_pull_mode(PIN_SD_CS, GPIO_PULLUP_ONLY);
-    gpio_set_pull_mode(PIN_SD_MOSI, GPIO_PULLUP_ONLY);
-    gpio_set_pull_mode(PIN_SD_MISO, GPIO_PULLUP_ONLY);
-    gpio_set_pull_mode(PIN_SD_CLK, GPIO_PULLUP_ONLY);
 
     ESP_LOGI(LOG_TAG.data(),
              "SD mount setup host=%d freq=%dKHz sd_cs=%d",
