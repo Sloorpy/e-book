@@ -5,12 +5,21 @@
 
 static constexpr char TAG[] = "Display";
 
-Display::Display(std::shared_ptr<SPI> spi) :
+enum class DISPLAY_COMMANDS : uint8_t {
+    RESET = 0x12, 
+    BW_UPDATE = 0x21, // Could be Red too (but you don't support it) 
+    BW_BOARER_UPDATE = 0x3C,
+    RAM_WRITE = 0x24
+};
+
+
+Display::Display(std::shared_ptr<SPI> spi, const Color screen_mode) :
     GFXcanvas1(_WIDTH, _HEIGHT),
     _spi(spi),
-    _handle(initialize_hardware())
+    _handle(initialize_hardware()),
+    _mode(screen_mode)
 {
-    wakeUp();        
+    wake_up();        
     fill_screen(Color::WHITE);
     setRotation(1);
 }
@@ -84,18 +93,22 @@ void Display::sendData(uint8_t data) {
     ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
 }
 
-void Display::wakeUp() {
+void Display::wake_up() {
     reset();
     waitBusy();
     sendCmd(0x12);  // SWRESET
     waitBusy();
 
+    static constexpr uint8_t DARK_MODE = 0x48;
+    static constexpr uint8_t LIGHT_MODE = 0x40;
     sendCmd(0x21);
-    sendData(0x40);
+    sendData(_mode == Color::WHITE ? LIGHT_MODE : DARK_MODE);
     sendData(0x00);
 
+    static constexpr uint8_t DARK_BORDER= 0x00;
+    static constexpr uint8_t LIGHT_BORDER= 0x05;
     sendCmd(0x3C);
-    sendData(0x05);
+    sendData(_mode == Color::WHITE ? LIGHT_BORDER : DARK_BORDER);
 
     sendCmd(0x1A);
     sendData(0x5A);
@@ -180,7 +193,7 @@ void Display::drawPixel(int16_t x, int16_t y, uint16_t color)
 void Display::update()
 {
     printf("Display::update()\n");
-    wakeUp();
+    wake_up();
 
     sendCmd(0x24);
     gpio_set_level((gpio_num_t)PIN_DC, 1);

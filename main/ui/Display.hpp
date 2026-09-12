@@ -21,14 +21,14 @@ enum class Color : uint8_t
 class Display final : public GFXcanvas1
 {
 public:
-    explicit Display(std::shared_ptr<SPI> spi);
+    explicit Display(std::shared_ptr<SPI> spi, const Color screen_mode = Color::WHITE);
     ~Display();
 
 public: 
     void update();
     void deep_sleep();
     void fill_screen(const Color color);
-    void drawPixel(int16_t x, int16_t y, uint16_t color);
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override;
     GFXfont* getFont();
 
 private:
@@ -37,11 +37,12 @@ private:
     void waitBusy();
     void sendCmd(uint8_t cmd);
     void sendData(uint8_t data);
-    void wakeUp();
+    void wake_up();
 
 private:
     std::shared_ptr<SPI> _spi;
     const spi_device_handle_t _handle;
+    Color _mode;
 
 private:
     static constexpr uint16_t _WIDTH  = 400;
