@@ -5,14 +5,6 @@
 
 static constexpr char TAG[] = "Display";
 
-enum class DISPLAY_COMMANDS : uint8_t {
-    RESET = 0x12, 
-    BW_UPDATE = 0x21, // Could be Red too (but you don't support it) 
-    BW_BOARER_UPDATE = 0x3C,
-    RAM_WRITE = 0x24
-};
-
-
 Display::Display(std::shared_ptr<SPI> spi, const Color screen_mode) :
     GFXcanvas1(_WIDTH, _HEIGHT),
     _spi(spi),
@@ -93,6 +85,15 @@ void Display::sendData(uint8_t data) {
     ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
 }
 
+void Display::sendData16(uint16_t data)
+{
+    gpio_set_level((gpio_num_t)PIN_DC, 1);
+    spi_transaction_t t = {};
+    t.length = 16;
+    t.tx_buffer = &data;
+    ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
+}
+
 void Display::wake_up() {
     reset();
     waitBusy();
@@ -110,30 +111,31 @@ void Display::wake_up() {
     sendCmd(0x3C);
     sendData(_mode == Color::WHITE ? LIGHT_BORDER : DARK_BORDER);
 
-    sendCmd(0x1A);
+    // Temperatue preparations
+    sendCmd(static_cast<uint8_t>(DisplayCommand::TEMPERATURE));
     sendData(0x5A);
     sendCmd(0x22);
     sendData(0x91);
     sendCmd(0x20);
     waitBusy();
 
-    sendCmd(0x11);
+    // Ram traveral
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_TRAVERSAL));
     sendData(0x01);
 
-    sendCmd(0x44);
-    sendData(0x00);
-    sendData(0x31);
-    sendCmd(0x45);
-    sendData(0x2B);
-    sendData(0x01);
-    sendData(0x00);
-    sendData(0x00);
+    
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_X));
+    sendData(0x00); // X start
+    sendData(static_cast<uint8_t>(_FRAMEBUFFER_STRIDE - 1)); // X end
 
-    sendCmd(0x4E);
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_Y));
+    sendData16(_HEIGHT - 1); // Y start
+    sendData16(0); // Y end
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::X_START_POSITION));
     sendData(0x00);
-    sendCmd(0x4F);
-    sendData(0x2B);
-    sendData(0x01);
+    sendCmd(static_cast<uint8_t>(DisplayCommand::Y_START_POSITION));
+    sendData16(_HEIGHT - 1);
 }
 
 void Display::fill_screen(const Color color)

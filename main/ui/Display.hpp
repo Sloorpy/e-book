@@ -18,6 +18,21 @@ enum class Color : uint8_t
     WHITE = 1
 };
 
+enum class DisplayCommand : uint8_t {
+    RAM_TRAVERSAL = 0x11,
+    RESET = 0x12,
+    TEMPERATURE = 0x1A, 
+    BW_UPDATE = 0x21, // Could be Red too (but you don't support it) 
+    BW_BOARER_UPDATE = 0x3C,
+    RAM_WRITE = 0x24,
+    RAM_WRITE_PREVIOUS = 0x26,
+    RAM_WINDOW_X = 0x44,
+    RAM_WINDOW_Y = 0x45,
+    X_START_POSITION = 0x4E,
+    Y_START_POSITION = 0x4F,
+};
+
+
 class Display final : public GFXcanvas1
 {
 public:
@@ -37,6 +52,7 @@ private:
     void waitBusy();
     void sendCmd(uint8_t cmd);
     void sendData(uint8_t data);
+    void sendData16(uint16_t data);
     void wake_up();
 
 private:
