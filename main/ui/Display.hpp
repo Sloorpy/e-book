@@ -41,6 +41,8 @@ public:
 
 public: 
     void update();
+    void full_partial_update();
+    void partial_update(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h);
     void deep_sleep();
     void fill_screen(const Color color);
     void drawPixel(int16_t x, int16_t y, uint16_t color) override;
@@ -54,6 +56,10 @@ private:
     void sendData(uint8_t data);
     void sendData16(uint16_t data);
     void wake_up();
+    void write_ram_region(
+            const DisplayCommand command, 
+            uint16_t x_start, uint16_t y_start, 
+            uint16_t x_end, uint16_t y_end);
 
 private:
     std::shared_ptr<SPI> _spi;

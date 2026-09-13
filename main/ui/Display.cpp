@@ -3,6 +3,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include <exception>
+
 static constexpr char TAG[] = "Display";
 
 Display::Display(std::shared_ptr<SPI> spi, const Color screen_mode) :
@@ -138,6 +140,62 @@ void Display::wake_up() {
     sendData16(_HEIGHT - 1);
 }
 
+void Display::write_ram_region(const DisplayCommand command, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end)
+{const uint8_t ram_x_start = static_cast<uint8_t>(x_start / 8);
+    const uint8_t ram_x_end = static_cast<uint8_t>(x_end / 8);
+    const uint16_t ram_y_start = _HEIGHT - 1 - y_start;
+    const uint16_t ram_y_end = _HEIGHT - 1 - y_end;
+
+    ESP_LOGI(
+    TAG,
+    "Partial: pixels X=%u..%u Y=%u..%u | RAM X=%u..%u Y=%u..%u",
+    x_start,
+    x_end,
+    y_start,
+    y_end,
+    ram_x_start,
+    ram_x_end,
+    ram_y_start,
+    ram_y_end
+    );
+
+    // Prepare e-paper to partial update
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_TRAVERSAL));
+    sendData(0x01);
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_X));
+    sendData(ram_x_start);
+    sendData(ram_x_end);
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_Y));
+    sendData16(ram_y_start);
+    sendData16(ram_y_end);
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::X_START_POSITION));
+    sendData(ram_x_start);
+    
+    sendCmd(static_cast<uint8_t>(DisplayCommand::Y_START_POSITION));
+    sendData16(ram_y_start);
+    
+
+    sendCmd(static_cast<uint8_t>(command));
+    gpio_set_level(PIN_DC, 1);
+
+    uint8_t* buffer = getBuffer();
+    const uint16_t bytes_per_row = ram_x_end - ram_x_start + 1;
+    for (uint16_t row = y_start; row <= y_end; ++row) {
+        spi_transaction_t t = {};
+
+        t.length = bytes_per_row * 8;
+
+        t.tx_buffer = buffer + static_cast<size_t>(row) * _FRAMEBUFFER_STRIDE + ram_x_start;
+
+        ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
+    }
+
+    gpio_set_level(PIN_DC, 0);
+}
+
 void Display::fill_screen(const Color color)
 {
     GFXcanvas1::fillScreen(static_cast<uint8_t>(color));
@@ -214,6 +272,40 @@ void Display::update()
     sendCmd(0x20);
     waitBusy();
     printf("update complete\n");
+}
+
+void Display::full_partial_update()
+{
+    partial_update(0,0,WIDTH, HEIGHT);
+}
+
+void Display::partial_update(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h)
+{
+    printf("Display::partial_update()\n");
+
+    if (!w || !h ||
+        x >= _WIDTH ||
+        y >= _HEIGHT ||
+        w > _WIDTH - x ||
+        h > _HEIGHT - y) {
+        throw std::runtime_error("Bad parameters for Display::partial_update");
+    }
+
+    const uint16_t x_end = x + w - 1;
+    const uint16_t y_end = y + h - 1;    
+    write_ram_region(DisplayCommand::RAM_WRITE, x, y, x_end, y_end);
+
+    sendCmd(0x21);
+    sendData(0x00);
+    sendData(0x00);
+    
+    sendCmd(0x22);
+    sendData(0xFC);
+    
+    sendCmd(0x20);
+    waitBusy();
+    write_ram_region(DisplayCommand::RAM_WRITE_PREVIOUS, x, y, x_end, y_end);
+    write_ram_region(DisplayCommand::RAM_WRITE, x, y, x_end, y_end);
 }
 
 void Display::deep_sleep() {
