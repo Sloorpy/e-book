@@ -3,7 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include <exception>
+#include <stdexcept>
 
 static constexpr char TAG[] = "Display";
 
@@ -11,7 +11,8 @@ Display::Display(std::shared_ptr<SPI> spi, const Color screen_mode) :
     GFXcanvas1(_WIDTH, _HEIGHT),
     _spi(spi),
     _handle(initialize_hardware()),
-    _mode(screen_mode)
+    _mode(screen_mode),
+    _partial_ready(false)
 {
     wake_up();        
     fill_screen(Color::WHITE);
@@ -65,7 +66,7 @@ void Display::waitBusy() {
     while (gpio_get_level(PIN_BUSY) != 0) {
         if (++polls >= MAX_POLLS) {
             ESP_LOGE(TAG, "Display BUSY timeout");
-            return;
+            throw std::runtime_error("Display BUSY timeout");
         }
         vTaskDelay(POLL_DELAY);
     }
@@ -97,6 +98,7 @@ void Display::sendData16(uint16_t data)
 }
 
 void Display::wake_up() {
+    _partial_ready = false;
     reset();
     waitBusy();
     sendCmd(0x12);  // SWRESET
@@ -259,6 +261,7 @@ void Display::update()
     sendData(0xC7);
     sendCmd(0x20);
     waitBusy();
+    _partial_ready = true;
     printf("update complete\n");
 }
 
@@ -279,6 +282,12 @@ void Display::partial_update(const uint16_t x, const uint16_t y, const uint16_t 
         throw std::runtime_error("Bad parameters for Display::partial_update");
     }
 
+    if (!_partial_ready) {
+        update();
+        return;
+    }
+    waitBusy();
+
     const uint16_t x_end = x + w - 1;
     const uint16_t y_end = y + h - 1;    
     write_ram_region(DisplayCommand::RAM_WRITE, x, y, x_end, y_end);
@@ -294,12 +303,18 @@ void Display::partial_update(const uint16_t x, const uint16_t y, const uint16_t 
     waitBusy();
     write_ram_region(DisplayCommand::RAM_WRITE_PREVIOUS, x, y, x_end, y_end);
     write_ram_region(DisplayCommand::RAM_WRITE, x, y, x_end, y_end);
+
+    sendCmd(0x22);
+    sendData(0x03);
+    sendCmd(0x20);
+    waitBusy();
 }
 
 void Display::deep_sleep() {
     waitBusy();
     sendCmd(0x10);
     sendData(0x01);
+    _partial_ready = false;
 }
 
 GFXfont* Display::getFont() {

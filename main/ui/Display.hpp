@@ -65,6 +65,7 @@ private:
     std::shared_ptr<SPI> _spi;
     const spi_device_handle_t _handle;
     Color _mode;
+    bool _partial_ready;
 
 private:
     static constexpr uint16_t _WIDTH  = 400;
