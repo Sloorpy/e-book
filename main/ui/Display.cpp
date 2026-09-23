@@ -146,19 +146,6 @@ void Display::write_ram_region(const DisplayCommand command, uint16_t x_start, u
     const uint16_t ram_y_start = _HEIGHT - 1 - y_start;
     const uint16_t ram_y_end = _HEIGHT - 1 - y_end;
 
-    ESP_LOGI(
-    TAG,
-    "Partial: pixels X=%u..%u Y=%u..%u | RAM X=%u..%u Y=%u..%u",
-    x_start,
-    x_end,
-    y_start,
-    y_end,
-    ram_x_start,
-    ram_x_end,
-    ram_y_start,
-    ram_y_end
-    );
-
     // Prepare e-paper to partial update
     sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_TRAVERSAL));
     sendData(0x01);
@@ -254,18 +241,19 @@ void Display::update()
 {
     printf("Display::update()\n");
     wake_up();
+    write_ram_region(
+        DisplayCommand::RAM_WRITE_PREVIOUS,
+        0, 0,
+        _WIDTH - 1,
+        _HEIGHT - 1
+    );
 
-    sendCmd(0x24);
-    gpio_set_level((gpio_num_t)PIN_DC, 1);
-
-        uint8_t* buffer = getBuffer();
-
-    for (uint16_t y = 0; y < _HEIGHT; y++) {
-        spi_transaction_t t = {};
-        t.length = _FRAMEBUFFER_STRIDE * 8;
-        t.tx_buffer = buffer + static_cast<size_t>(y) * _FRAMEBUFFER_STRIDE;
-        ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
-    }
+    write_ram_region(
+        DisplayCommand::RAM_WRITE,
+        0, 0,
+        _WIDTH - 1,
+        _HEIGHT - 1
+    );
 
     sendCmd(0x22);
     sendData(0xC7);
@@ -309,6 +297,7 @@ void Display::partial_update(const uint16_t x, const uint16_t y, const uint16_t 
 }
 
 void Display::deep_sleep() {
+    waitBusy();
     sendCmd(0x10);
     sendData(0x01);
 }
