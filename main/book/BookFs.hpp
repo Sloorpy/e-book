@@ -11,8 +11,8 @@
 #include <gfxfont.h>
 
 struct PageRange final {
-    size_t start;
-    size_t end;
+    uint32_t start;
+    uint32_t end;
 };
 
 struct Chapter final {
@@ -24,17 +24,19 @@ struct Chapter final {
 
 struct StateInfo final {
     uint16_t chapter_num;
-    size_t index;
+    uint32_t index;
 };
 
-class PageManager final {
+class BookFs final {
 public:
-    explicit PageManager(const std::string_view& book_name);
+    explicit BookFs(const std::string_view& book_name);
 
 public:
     std::string get_title() const;
     std::string get_author() const;
     std::string get_chapter_title(const uint16_t chapter_num) const;
+    std::vector<uint8_t> read_page(const uint16_t chapter_num, const size_t buffer_size, const uint64_t offset = 0);
+    uint64_t chapter_size(const uint16_t chapter_num);
 
     Chapter load_chapter(const uint16_t chapter_num, const GFXfont* font);
     uint16_t chapter_count() const;

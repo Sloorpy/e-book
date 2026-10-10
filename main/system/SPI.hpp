@@ -2,6 +2,8 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 
+#include "memory"
+
 class SDManager;
 
 class SPI final
@@ -10,8 +12,12 @@ private:
     friend class Display;
 
 public:
-    explicit SPI(const spi_host_device_t host=SPI2_HOST);
+    explicit SPI(const spi_host_device_t host, const gpio_num_t mosi, const gpio_num_t miso, const gpio_num_t clk);
     ~SPI();
+
+public:
+    static std::unique_ptr<SPI> create_display_spi();
+    static std::unique_ptr<SPI> create_sd_spi();
 
 public:
     spi_device_handle_t add_device(const spi_device_interface_config_t& device_conf);
@@ -19,9 +25,7 @@ public:
 
 private:
     const spi_host_device_t _host;
-
-private:
-    static constexpr gpio_num_t PIN_MOSI = GPIO_NUM_23;
-    static constexpr gpio_num_t PIN_CLK  = GPIO_NUM_18;
-    static const gpio_num_t PIN_MISO = GPIO_NUM_19;
+    const gpio_num_t _mosi;
+    const gpio_num_t _miso;
+    const gpio_num_t _clk;
 };

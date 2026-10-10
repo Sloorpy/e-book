@@ -21,6 +21,9 @@ public:
            );
 
 public:
+    TextBox(uint16_t width, uint16_t height, const GFXfont* font, uint16_t text_size = 1);
+
+public:
     void setCursor(Vector2 pos);
     void setCursor(int16_t x, int16_t y);
     void resetCursor();
@@ -31,8 +34,17 @@ public:
     void setTextColor(uint8_t color);
 
 public:
-    size_t write(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right,  const Direction base_direction = Direction::RTL);
-    size_t next_print_size(const std::vector<uint8_t>& str, InitialPosition pos = InitialPosition::Right);
+    size_t write(
+        const std::vector<uint8_t>& str,
+        InitialPosition pos = InitialPosition::Right,
+        Direction base_direction = Direction::RTL
+    );
+
+    size_t next_print_size(
+        const std::vector<uint8_t>& str,
+        InitialPosition pos = InitialPosition::Right,
+        Direction base_direction = Direction::RTL
+    );
     void next_line(InitialPosition pos = InitialPosition::Left, int16_t line_width = 0);
 
 public:
@@ -49,7 +61,7 @@ public:
     int16_t width() const;
     
 private:
-    TextPage build_page_layout(const std::vector<uint8_t>& str, const Direction base_direction) const;
+    TextPage build_page_layout(const std::vector<uint8_t>& str, Direction base_direction) const;
     void write_token(const ResolvedToken& token);
     void write_line(const Line& line , const InitialPosition pos);
 

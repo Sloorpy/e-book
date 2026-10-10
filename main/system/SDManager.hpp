@@ -16,7 +16,7 @@
 class SDManager final
 {
 public:
-    static void init(std::shared_ptr<SPI> spi, const std::string_view& base_path = "/sdcard");
+    static void init(const std::string_view& base_path = "/sdcard");
     static SDManager& instance();
     SDManager(const SDManager&) = delete;
     SDManager& operator=(const SDManager&) = delete;
@@ -40,6 +40,6 @@ private:
     static constexpr std::string_view LOG_TAG = "SDManger";
 
 private:
-    static constexpr gpio_num_t PIN_SD_CS = GPIO_NUM_21;
+    static constexpr gpio_num_t PIN_SD_CS = GPIO_NUM_32;
     static SDManager* _instance;
 };

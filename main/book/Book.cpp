@@ -4,6 +4,7 @@
 #include "Fonts/hebEng5x7avia.h"
 #include "Fonts/FreeMonoBold9pt7b.h"
 #include "Display.hpp"
+#include "Config.hpp"
 
 #include <string_view>
 #include <esp_log.h>
@@ -16,6 +17,38 @@ static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 
 static constexpr Vector2 TEXT_POSITION{0, 18};
 static constexpr uint16_t TEXT_SIZE = 2;
+
+uint32_t Book::next_print_size_from(
+    const std::vector<uint8_t>& pages,
+    const uint32_t page_start,
+    TextBox& text_box
+) {
+    if (page_start >= pages.size()) {
+        return 0;
+    }
+
+    const size_t remaining_size = pages.size() - page_start;
+    size_t window_size = std::min(Config::INITIAL_PAGE_WINDOW_SIZE, remaining_size);
+
+    size_t bytes_written = 0;
+    bool should_grow_window = false;
+
+    do {
+        const std::vector<uint8_t> page_window(
+            pages.begin() + page_start,
+            pages.begin() + page_start + window_size
+        );
+
+        bytes_written = text_box.next_print_size(page_window);
+        should_grow_window = bytes_written == window_size && window_size < remaining_size;
+
+        if (should_grow_window) {
+            window_size = std::min(window_size * 2, remaining_size);
+        }
+    } while (should_grow_window);
+
+    return static_cast<uint32_t>(bytes_written);
+}
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
     _page_manager(book_name),
@@ -61,13 +94,13 @@ void Book::display_title()
     const std::string title = _page_manager.get_title();
     const std::string author = _page_manager.get_author();
     
-    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);
-    TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, TITLE_TEXT_SIZE);
+    TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
 
     title_tb.write(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
     author_tb.write(TextHelper::serialize_to_font_indices(author, get_font()));
     
-    static const Vector2 bitmap_position{(PAGE_WIDTH - static_cast<int16_t>(BITMAP_WIDTH)) / 2, 150};
+    static const Vector2 bitmap_position{(Config::PAGE_WIDTH - static_cast<int16_t>(Config::BITMAP_WIDTH)) / 2, 150};
     draw_cover(bitmap_position.x, bitmap_position.y);
 }
 
@@ -76,15 +109,10 @@ void Book::no_more_pages()
     static constexpr Vector2 TEXT_POSITION{0, 50};
     static constexpr uint16_t TEXT_SIZE = 3;
 
-    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TEXT_SIZE);
+    TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, TEXT_SIZE);
     
     static constexpr std::string_view msg = "נגמרו העמודים :)";
     text_box.write(TextHelper::serialize_to_font_indices(std::string(msg), get_font()));
-}
-
-size_t Book::print_page_size(const std::vector<uint8_t>& text)
-{
-    return make_page_text_box().next_print_size(text);
 }
 
 void Book::display_current_page()
@@ -120,7 +148,7 @@ void Book::first_chapter_title()
 void Book::load_all_pages()
 {
     if (_current_chapter.page_indicies.empty() && _current_chapter.num > 0) {
-        build_page_indices(_current_chapter.pages.size());
+        build_page_indices(static_cast<uint32_t>(_current_chapter.pages.size()));
     }
 
     if (!_current_chapter.page_indicies.empty()) {
@@ -141,7 +169,7 @@ void Book::prev_chapter_last_page()
 
     const uint16_t prev_chapter = _current_chapter.num - 1;
     _current_chapter = _page_manager.load_chapter(prev_chapter, get_font());
-    build_page_indices(_current_chapter.pages.size());
+    build_page_indices(static_cast<uint32_t>(_current_chapter.pages.size()));
 
     if (!_current_chapter.page_indicies.empty()) {
         _view_state = BookViewState::PAGE;
@@ -213,8 +241,8 @@ void Book::display_chapter_title()
     const std::string chapter_num_str = std::to_string(_current_chapter.num);
     const std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
 
-    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
-    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, PAGE_WIDTH, PAGE_HEIGHT, TITLE_TEXT_SIZE);    
+    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::PAGE_WIDTH, Config::PAGE_HEIGHT, TITLE_TEXT_SIZE);    
 
     number_tb.write(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center);
     title_tb.write(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center);
@@ -222,7 +250,7 @@ void Book::display_chapter_title()
 
 void Book::display_header()
 {
-    _display->drawLine(0, TEXT_POSITION.y, PAGE_WIDTH, TEXT_POSITION.y, 0);
+    _display->drawLine(0, TEXT_POSITION.y, Config::PAGE_WIDTH, TEXT_POSITION.y, 0);
     const uint16_t part_width =  _display->width() / 5;
     TextBox left_tb = make_header_text_box(0, part_width * 2);
     TextBox middle_tb = make_header_text_box(part_width * 2, TEXT_POSITION.x + part_width * 3);
@@ -245,8 +273,8 @@ void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
         return;
     }
     
-    _display->drawRect(start_x, start_y, BITMAP_WIDTH, BITMAP_HEIGHT, 0);
-    _display->drawBitmap(start_x, start_y, bitmap.data(), BITMAP_WIDTH, BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
+    _display->drawRect(start_x, start_y, Config::BITMAP_WIDTH, Config::BITMAP_HEIGHT, 0);
+    _display->drawBitmap(start_x, start_y, bitmap.data(), Config::BITMAP_WIDTH, Config::BITMAP_HEIGHT, static_cast<uint16_t>(Color::BLACK));
 }
 
 bool Book::has_next_page() const
@@ -281,7 +309,8 @@ void Book::load_chapter_save()
     }
 
     _current_chapter = _page_manager.load_chapter(chapter_num, get_font());
-    const size_t chapter_offset =  std::min(state.index, _current_chapter.pages.size());
+    const uint32_t chapter_size = static_cast<uint32_t>(_current_chapter.pages.size());
+    const uint32_t chapter_offset = std::min(state.index, chapter_size);
     
     if (_current_chapter.num >= _page_manager.chapter_count() && chapter_offset >= _current_chapter.pages.size()) {
         _view_state = BookViewState::FINISHED;
@@ -318,8 +347,8 @@ TextBox Book::make_page_text_box() const
         _display,
         0,
         TEXT_POSITION.y + SPACE_FROM_BORDER,
-        PAGE_WIDTH, 
-        PAGE_HEIGHT, 
+        Config::PAGE_WIDTH, 
+        Config::PAGE_HEIGHT, 
         get_font(),
         TEXT_SIZE
     );
@@ -373,17 +402,13 @@ BookViewState Book::handle_next_chapter()
         return BookViewState::CHAPTER_TITLE;
     }
     
-    size_t page_start = 0;
+    uint32_t page_start = 0;
     if (!_current_chapter.page_indicies.empty()) {
         page_start = _current_chapter.page_indicies.top().end;
     }
     
-    const std::vector<uint8_t> curr_text(
-        _current_chapter.pages.begin() + page_start,
-        _current_chapter.pages.end()
-    );
-
-    const size_t bytes_written = print_page_size(curr_text);   
+    TextBox page_text_box = make_page_text_box();
+    const uint32_t bytes_written = Book::next_print_size_from(_current_chapter.pages, page_start, page_text_box);
     if (bytes_written == 0) {
         throw std::runtime_error("Tried to get print page size for `next_page` but got size of 0");
     }
@@ -408,25 +433,21 @@ BookViewState Book::handle_prev_chapter()
     return BookViewState::PAGE;
 }
 
-void Book::build_page_indices(size_t end_offset)
+void Book::build_page_indices(uint32_t end_offset)
 {
-    if (end_offset >= _current_chapter.pages.size()) {
-        end_offset = _current_chapter.pages.size();
-    }
+    end_offset = std::min(
+        end_offset,
+        static_cast<uint32_t>(_current_chapter.pages.size())
+    );
 
     _current_chapter.page_indicies = std::stack<PageRange>();
  
-    size_t offset = 0;
+    uint32_t offset = 0;
     TextBox temp_tb = make_page_text_box();
     while (offset < end_offset) {
-        const size_t start_offset = offset;
+        const uint32_t start_offset = offset;
 
-        const std::vector<uint8_t> page(
-            _current_chapter.pages.begin() + offset,
-            _current_chapter.pages.end()
-        );
-
-        const size_t page_size = temp_tb.next_print_size(page);
+        const uint32_t page_size = Book::next_print_size_from(_current_chapter.pages, offset, temp_tb);
         if (page_size == 0) {
             break;
         }

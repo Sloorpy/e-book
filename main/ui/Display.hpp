@@ -18,17 +18,34 @@ enum class Color : uint8_t
     WHITE = 1
 };
 
+enum class DisplayCommand : uint8_t {
+    RAM_TRAVERSAL = 0x11,
+    RESET = 0x12,
+    TEMPERATURE = 0x1A, 
+    BW_UPDATE = 0x21, // Could be Red too (but you don't support it) 
+    BW_BOARER_UPDATE = 0x3C,
+    RAM_WRITE = 0x24,
+    RAM_WRITE_PREVIOUS = 0x26,
+    RAM_WINDOW_X = 0x44,
+    RAM_WINDOW_Y = 0x45,
+    X_START_POSITION = 0x4E,
+    Y_START_POSITION = 0x4F,
+};
+
+
 class Display final : public GFXcanvas1
 {
 public:
-    explicit Display(std::shared_ptr<SPI> spi);
+    explicit Display(std::shared_ptr<SPI> spi, const Color screen_mode = Color::WHITE);
     ~Display();
 
 public: 
     void update();
+    void full_partial_update();
+    void partial_update(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h);
     void deep_sleep();
     void fill_screen(const Color color);
-    void drawPixel(int16_t x, int16_t y, uint16_t color);
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override;
     GFXfont* getFont();
 
 private:
@@ -37,11 +54,18 @@ private:
     void waitBusy();
     void sendCmd(uint8_t cmd);
     void sendData(uint8_t data);
-    void wakeUp();
+    void sendData16(uint16_t data);
+    void wake_up();
+    void write_ram_region(
+            const DisplayCommand command, 
+            uint16_t x_start, uint16_t y_start, 
+            uint16_t x_end, uint16_t y_end);
 
 private:
     std::shared_ptr<SPI> _spi;
     const spi_device_handle_t _handle;
+    Color _mode;
+    bool _partial_ready;
 
 private:
     static constexpr uint16_t _WIDTH  = 400;

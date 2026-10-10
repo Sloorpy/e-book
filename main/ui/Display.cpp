@@ -3,12 +3,18 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-Display::Display(std::shared_ptr<SPI> spi) :
+#include <stdexcept>
+
+static constexpr char TAG[] = "Display";
+
+Display::Display(std::shared_ptr<SPI> spi, const Color screen_mode) :
     GFXcanvas1(_WIDTH, _HEIGHT),
     _spi(spi),
-    _handle(initialize_hardware())
+    _handle(initialize_hardware()),
+    _mode(screen_mode),
+    _partial_ready(false)
 {
-    wakeUp();        
+    wake_up();        
     fill_screen(Color::WHITE);
     setRotation(1);
 }
@@ -43,20 +49,26 @@ spi_device_handle_t Display::initialize_hardware()
 }
 
 void Display::reset() {
-    gpio_set_level((gpio_num_t)PIN_RST, 0);
+    gpio_set_level(PIN_RST, 0);
     vTaskDelay(pdMS_TO_TICKS(10));
-    gpio_set_level((gpio_num_t)PIN_RST, 1);
-    vTaskDelay(pdMS_TO_TICKS(10));
+    gpio_set_level(PIN_RST, 1);
+    vTaskDelay(pdMS_TO_TICKS(20));
 }
 
 void Display::waitBusy() {
-    int count = 0;
-    while (gpio_get_level((gpio_num_t)PIN_BUSY) != 0) {
-        if (count++ > 2000) {
-            printf("waitBusy timeout\n");
-            break;
+    constexpr TickType_t POLL_DELAY = pdMS_TO_TICKS(10);
+    constexpr uint16_t MAX_POLLS = 1500;
+    
+    constexpr TickType_t COMMAND_SETTLE_DELAY = pdMS_TO_TICKS(100);
+    vTaskDelay(COMMAND_SETTLE_DELAY);
+
+    uint16_t polls = 0;
+    while (gpio_get_level(PIN_BUSY) != 0) {
+        if (++polls >= MAX_POLLS) {
+            ESP_LOGE(TAG, "Display BUSY timeout");
+            throw std::runtime_error("Display BUSY timeout");
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(POLL_DELAY);
     }
 }
 
@@ -76,43 +88,101 @@ void Display::sendData(uint8_t data) {
     ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
 }
 
-void Display::wakeUp() {
+void Display::sendData16(uint16_t data)
+{
+    gpio_set_level((gpio_num_t)PIN_DC, 1);
+    spi_transaction_t t = {};
+    t.length = 16;
+    t.tx_buffer = &data;
+    ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
+}
+
+void Display::wake_up() {
+    _partial_ready = false;
     reset();
     waitBusy();
     sendCmd(0x12);  // SWRESET
     waitBusy();
 
+    static constexpr uint8_t DARK_MODE = 0x48;
+    static constexpr uint8_t LIGHT_MODE = 0x40;
     sendCmd(0x21);
-    sendData(0x40);
+    sendData(_mode == Color::WHITE ? LIGHT_MODE : DARK_MODE);
     sendData(0x00);
 
+    static constexpr uint8_t DARK_BORDER= 0x00;
+    static constexpr uint8_t LIGHT_BORDER= 0x05;
     sendCmd(0x3C);
-    sendData(0x05);
+    sendData(_mode == Color::WHITE ? LIGHT_BORDER : DARK_BORDER);
 
-    sendCmd(0x1A);
+    // Temperatue preparations
+    sendCmd(static_cast<uint8_t>(DisplayCommand::TEMPERATURE));
     sendData(0x5A);
     sendCmd(0x22);
     sendData(0x91);
     sendCmd(0x20);
     waitBusy();
 
-    sendCmd(0x11);
+    // Ram traveral
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_TRAVERSAL));
     sendData(0x01);
 
-    sendCmd(0x44);
-    sendData(0x00);
-    sendData(0x31);
-    sendCmd(0x45);
-    sendData(0x2B);
-    sendData(0x01);
-    sendData(0x00);
-    sendData(0x00);
+    
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_X));
+    sendData(0x00); // X start
+    sendData(static_cast<uint8_t>(_FRAMEBUFFER_STRIDE - 1)); // X end
 
-    sendCmd(0x4E);
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_Y));
+    sendData16(_HEIGHT - 1); // Y start
+    sendData16(0); // Y end
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::X_START_POSITION));
     sendData(0x00);
-    sendCmd(0x4F);
-    sendData(0x2B);
+    sendCmd(static_cast<uint8_t>(DisplayCommand::Y_START_POSITION));
+    sendData16(_HEIGHT - 1);
+}
+
+void Display::write_ram_region(const DisplayCommand command, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end)
+{const uint8_t ram_x_start = static_cast<uint8_t>(x_start / 8);
+    const uint8_t ram_x_end = static_cast<uint8_t>(x_end / 8);
+    const uint16_t ram_y_start = _HEIGHT - 1 - y_start;
+    const uint16_t ram_y_end = _HEIGHT - 1 - y_end;
+
+    // Prepare e-paper to partial update
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_TRAVERSAL));
     sendData(0x01);
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_X));
+    sendData(ram_x_start);
+    sendData(ram_x_end);
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::RAM_WINDOW_Y));
+    sendData16(ram_y_start);
+    sendData16(ram_y_end);
+
+    sendCmd(static_cast<uint8_t>(DisplayCommand::X_START_POSITION));
+    sendData(ram_x_start);
+    
+    sendCmd(static_cast<uint8_t>(DisplayCommand::Y_START_POSITION));
+    sendData16(ram_y_start);
+    
+
+    sendCmd(static_cast<uint8_t>(command));
+    gpio_set_level(PIN_DC, 1);
+
+    uint8_t* buffer = getBuffer();
+    const uint16_t bytes_per_row = ram_x_end - ram_x_start + 1;
+    for (uint16_t row = y_start; row <= y_end; ++row) {
+        spi_transaction_t t = {};
+
+        t.length = bytes_per_row * 8;
+
+        t.tx_buffer = buffer + static_cast<size_t>(row) * _FRAMEBUFFER_STRIDE + ram_x_start;
+
+        ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
+    }
+
+    gpio_set_level(PIN_DC, 0);
 }
 
 void Display::fill_screen(const Color color)
@@ -172,30 +242,79 @@ void Display::drawPixel(int16_t x, int16_t y, uint16_t color)
 void Display::update()
 {
     printf("Display::update()\n");
-    wakeUp();
+    wake_up();
+    write_ram_region(
+        DisplayCommand::RAM_WRITE_PREVIOUS,
+        0, 0,
+        _WIDTH - 1,
+        _HEIGHT - 1
+    );
 
-    sendCmd(0x24);
-    gpio_set_level((gpio_num_t)PIN_DC, 1);
-
-        uint8_t* buffer = getBuffer();
-
-    for (uint16_t y = 0; y < _HEIGHT; y++) {
-        spi_transaction_t t = {};
-        t.length = _FRAMEBUFFER_STRIDE * 8;
-        t.tx_buffer = buffer + static_cast<size_t>(y) * _FRAMEBUFFER_STRIDE;
-        ESP_ERROR_CHECK(spi_device_transmit(_handle, &t));
-    }
+    write_ram_region(
+        DisplayCommand::RAM_WRITE,
+        0, 0,
+        _WIDTH - 1,
+        _HEIGHT - 1
+    );
 
     sendCmd(0x22);
     sendData(0xC7);
     sendCmd(0x20);
     waitBusy();
+    _partial_ready = true;
     printf("update complete\n");
 }
 
+void Display::full_partial_update()
+{
+    partial_update(0,0,WIDTH, HEIGHT);
+}
+
+void Display::partial_update(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h)
+{
+    printf("Display::partial_update()\n");
+
+    if (!w || !h ||
+        x >= _WIDTH ||
+        y >= _HEIGHT ||
+        w > _WIDTH - x ||
+        h > _HEIGHT - y) {
+        throw std::runtime_error("Bad parameters for Display::partial_update");
+    }
+
+    if (!_partial_ready) {
+        update();
+        return;
+    }
+    waitBusy();
+
+    const uint16_t x_end = x + w - 1;
+    const uint16_t y_end = y + h - 1;    
+    write_ram_region(DisplayCommand::RAM_WRITE, x, y, x_end, y_end);
+
+    sendCmd(0x21);
+    sendData(0x00);
+    sendData(0x00);
+    
+    sendCmd(0x22);
+    sendData(0xFC);
+    
+    sendCmd(0x20);
+    waitBusy();
+    write_ram_region(DisplayCommand::RAM_WRITE_PREVIOUS, x, y, x_end, y_end);
+    write_ram_region(DisplayCommand::RAM_WRITE, x, y, x_end, y_end);
+
+    sendCmd(0x22);
+    sendData(0x03);
+    sendCmd(0x20);
+    waitBusy();
+}
+
 void Display::deep_sleep() {
+    waitBusy();
     sendCmd(0x10);
     sendData(0x01);
+    _partial_ready = false;
 }
 
 GFXfont* Display::getFont() {

@@ -26,24 +26,22 @@ void BookState::on_click()
 {
     _display->fill_screen(Color::WHITE);
     _book->next_page();
-    _display->update();
-    _display->deep_sleep();
+    _display->full_partial_update();
 }
 
 void BookState::on_double_click()
 {
     _display->fill_screen(Color::WHITE);
     _book->prev_page();
-    _display->update();
-    _display->deep_sleep();
+    _display->full_partial_update();
 }
 
 void BookState::on_hold()
 {
     _display->fill_screen(Color::WHITE);
     _book->reset_book();
-    _display->update();
-    _display->deep_sleep();
+    _display->full_partial_update();
+}
 }
 
 std::unique_ptr<Book> BookState::create_book(const std::string_view &book_name)

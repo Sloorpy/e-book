@@ -2,6 +2,7 @@
 #include <esp_log.h>
 #include <stdexcept>
 #include <string>
+#include <climits>
 
 File::File(const std::string_view& filename, const std::string mode) :  
     _fd(open_file(filename, mode)) 
@@ -21,7 +22,7 @@ std::string File::read_all()
     return std::string(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 }
 
-std::string File::read(const uint32_t size)
+std::string File::read(const size_t size)
 {
     std::vector<uint8_t> buffer = read_bytes(size);
     return std::string(reinterpret_cast<const char*>(buffer.data()), buffer.size());
@@ -58,7 +59,7 @@ std::vector<uint8_t> File::read_all_bytes()
     return output;
 }
 
-std::vector<uint8_t> File::read_bytes(const uint32_t size)
+std::vector<uint8_t> File::read_bytes(const size_t size)
 {
     std::vector<uint8_t> buffer(size);
 
@@ -93,14 +94,40 @@ void File::write(const std::string &txt)
     }
 }
 
-void File::seek(size_t position) {
-    int result = fseek(_fd, static_cast<long>(position), SEEK_SET);
-    
-    if (result != 0)
-    {
-        ESP_LOGE(LOG_TAG.data(), "Failed to seek to %zu", position);
+void File::seek(uint64_t position)
+{
+    if (position > static_cast<uint64_t>(LONG_MAX)) {
+        throw std::runtime_error("Seek position is too large");
+    }
+
+    const int result = fseek(_fd, static_cast<long>(position), SEEK_SET);
+    if (result != 0) {
+        ESP_LOGE(LOG_TAG.data(), "Failed to seek to %llu", position);
         throw std::runtime_error("Failed to seek file");
     }
+}
+
+uint64_t File::size()
+{
+    const long initial_pos = ftell(_fd);
+    if (initial_pos < 0) {
+        throw std::runtime_error("Failed to get file position");
+    }
+
+    if (fseek(_fd, 0, SEEK_END) != 0) {
+        throw std::runtime_error("Failed to seek file end");
+    }    
+    
+    const long file_size = ftell(_fd);
+    if (file_size < 0) {
+        throw std::runtime_error("Failed to get file size");
+    }
+    
+    if (fseek(_fd, initial_pos, SEEK_SET) != 0) {
+        throw std::runtime_error("Failed to restore file position");
+    }
+
+    return static_cast<uint64_t>(file_size);
 }
 
 FILE *File::open_file(const std::string_view &filename, const std::string mode)
