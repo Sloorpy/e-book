@@ -17,6 +17,23 @@
 
 static constexpr std::string_view MAIN_TAG = "Main";
 static constexpr std::string_view BOOK_NAME = "percy_2_heb";
+static constexpr gpio_num_t LIGHT_PIN = GPIO_NUM_22;
+static bool LIGHT_STATE = true;
+
+static void toggle_light() {
+    gpio_set_level(LIGHT_PIN, LIGHT_STATE);
+    LIGHT_STATE = !LIGHT_STATE;
+}
+
+static void start_light() {
+    if (!GPIO_IS_VALID_OUTPUT_GPIO(LIGHT_PIN)) {
+        ESP_LOGE(MAIN_TAG.data(), "GPIO%d cannot drive the light; use an output-capable pin", LIGHT_PIN);
+        return;
+    }
+    ESP_ERROR_CHECK(gpio_set_level(LIGHT_PIN, 0));
+    ESP_ERROR_CHECK(gpio_set_direction(LIGHT_PIN, GPIO_MODE_OUTPUT));
+    toggle_light();
+}
 
 extern "C" void app_main(void)
 {   
