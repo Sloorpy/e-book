@@ -12,6 +12,9 @@ private:
 public:
     uint8_t percentage() const;
 
+private:
+    uint8_t calc_battery() const;
+    
 private: 
     AdcReader _adc_reader;
 };
