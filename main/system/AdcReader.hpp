@@ -1,6 +1,5 @@
 #pragma once
-#include "esp_adc/adc_oneshot.h"
-
+#include "AdcHandle.hpp"
 class AdcReader final {
 public:
     explicit AdcReader(const adc_channel_t channel);
@@ -15,7 +14,7 @@ private:
     void configure_adc_channel(const adc_channel_t channel);
 
 private:
-    adc_oneshot_unit_handle_t _adc_handle;
+    AdcHandle _adc_handle;
     adc_cali_handle_t _calibration_handle;
     adc_channel_t _channel;
 };
