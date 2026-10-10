@@ -22,7 +22,9 @@ uint32_t AdcReader::read() const
     if (result != ESP_OK) {
         throw std::runtime_error("Failed to read battery using `adc_oneshot_get_calibrated_result`. Error code: " + std::to_string(result));
     }
-    return static_cast<uint32_t>(output);
+
+    static constexpr uint32_t VOLTAGE_DIDIVOR_MULTIPLIER = 2;
+    return static_cast<uint32_t>(output) * VOLTAGE_DIDIVOR_MULTIPLIER;
 }
 
 adc_cali_handle_t AdcReader::initialize_calibration()
