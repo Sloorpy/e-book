@@ -5,6 +5,7 @@
 #include "Fonts/FreeMonoBold9pt7b.h"
 #include "Display.hpp"
 #include "Config.hpp"
+#include "Battery.hpp"
 
 #include <string_view>
 #include <esp_log.h>
@@ -254,7 +255,7 @@ void Book::display_header()
     const uint16_t part_width =  _display->width() / 5;
     TextBox left_tb = make_header_text_box(0, part_width * 2);
     TextBox middle_tb = make_header_text_box(part_width * 2, TEXT_POSITION.x + part_width * 3);
-    TextBox right_tb = make_header_text_box(part_width * 3, TEXT_POSITION.x + part_width * 5);
+    TextBox right_tb = make_header_text_box(part_width * 4, TEXT_POSITION.x + part_width * 5);
     
     const uint32_t pages_read = (_current_chapter.num - 1) * _current_chapter.pages.size() +
                      (_current_chapter.page_indicies.empty() ? 0 : _current_chapter.page_indicies.top().end);
@@ -262,8 +263,11 @@ void Book::display_header()
     printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
     
     left_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left, Direction::LTR);
-    middle_tb.write(TextHelper::serialize_to_font_indices("|", middle_tb.font()), InitialPosition::Center, Direction::LTR);
     right_tb.write(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right, Direction::LTR);
+
+    static const unsigned char PROGMEM BATTERY_IMAGE[] =  {0x7f,0xff,0xe0,0x00,0xff,0xff,0xfc,0x00,0xc0,0x00,0x1c,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xc0,0x00,0x1c,0x00,0xff,0xff,0xfc,0x00,0x7f,0xff,0xe0,0x00};
+    middle_tb.write(TextHelper::serialize_to_font_indices(std::to_string(Battery::get().percentage()) + "%", middle_tb.font()), InitialPosition::Right, Direction::LTR);
+    _display->drawBitmap(part_width * 3, 0,BATTERY_IMAGE, 26, 12, static_cast<uint16_t>(Color::BLACK));
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
