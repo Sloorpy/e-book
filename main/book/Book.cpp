@@ -2,7 +2,7 @@
 #include "Text/Support/TextHelper.hpp"
 #include "Text/Rendering/TextBox.hpp"
 #include "Fonts/hebEng5x7avia.h"
-#include "Fonts/FreeMonoBold9pt7b.h"
+#include "Fonts/RobotoSlab_SemiBold9pt7b.h"
 #include "Display.hpp"
 #include "Config.hpp"
 #include "Battery.hpp"
@@ -253,21 +253,30 @@ void Book::display_header()
 {
     _display->drawLine(0, TEXT_POSITION.y, Config::Display::PAGE_WIDTH, TEXT_POSITION.y, 0);
     const uint16_t part_width =  _display->width() / 5;
-    TextBox left_tb = make_header_text_box(0, part_width * 2);
-    TextBox middle_tb = make_header_text_box(part_width * 2, TEXT_POSITION.x + part_width * 3);
-    TextBox right_tb = make_header_text_box(part_width * 4, TEXT_POSITION.x + part_width * 5);
-    
+    static constexpr int16_t HEADER_BASELINE = 12;
+
+    TextBox progress_tb = make_header_text_box(0, part_width * 4, HEADER_BASELINE, &RobotoSlab_SemiBold9pt7b);
     const uint32_t pages_read = (_current_chapter.num - 1) * _current_chapter.pages.size() +
                      (_current_chapter.page_indicies.empty() ? 0 : _current_chapter.page_indicies.top().end);
     const uint32_t finished_percentage = (pages_read * 100) / (_current_chapter.pages.size() * _page_manager.chapter_count());
     printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
     
-    left_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num), left_tb.font()), InitialPosition::Left, Direction::LTR);
-    right_tb.write(TextHelper::serialize_to_font_indices( std::to_string(finished_percentage) + "%", right_tb.font()), InitialPosition::Right, Direction::LTR);
+    progress_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num) + " | " + std::to_string(finished_percentage) + "%", progress_tb.font()), InitialPosition::Left, Direction::LTR);
+    display_battery();
+   }
 
-    static const unsigned char PROGMEM BATTERY_IMAGE[] =  {0x7f,0xff,0xe0,0x00,0xff,0xff,0xfc,0x00,0xc0,0x00,0x1c,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xdd,0xdd,0xdf,0x00,0xc0,0x00,0x1c,0x00,0xff,0xff,0xfc,0x00,0x7f,0xff,0xe0,0x00};
-    middle_tb.write(TextHelper::serialize_to_font_indices(std::to_string(Battery::get().percentage()) + "%", middle_tb.font()), InitialPosition::Right, Direction::LTR);
-    _display->drawBitmap(part_width * 3, 0,BATTERY_IMAGE, 26, 12, static_cast<uint16_t>(Color::BLACK));
+void Book::display_battery()
+{
+    static constexpr int16_t BATTERY_WIDTH = 51;
+    static constexpr int16_t BATTERY_HEIGHT = 17;
+    static constexpr int16_t BATTERY_EXTRA_WIDTH = 3;
+    static constexpr int16_t HEADER_BASELINE = 14;
+
+    TextBox battery_tb = make_header_text_box(_display->width() - BATTERY_WIDTH, _display->width() - BATTERY_EXTRA_WIDTH,HEADER_BASELINE, &RobotoSlab_SemiBold9pt7b);    
+    static const unsigned char PROGMEM BATTERY_IMAGE[] = {0x7f,0xff,0xff,0xff,0xff,0xf0,0x00,0x70,0x00,0x00,0x00,0x00,0x38,0x00,0xe0,0x00,0x00,0x00,0x00,0x1c,0x00,0xc0,0x00,0x00,0x00,0x00,0x06,0x00,0xc0,0x00,0x00,0x00,0x00,0x06,0x80,0xc0,0x00,0x00,0x00,0x00,0x06,0xc0,0xc0,0x00,0x00,0x00,0x00,0x06,0xe0,0xc0,0x00,0x00,0x00,0x00,0x06,0xe0,0xc0,0x00,0x00,0x00,0x00,0x06,0xe0,0xc0,0x00,0x00,0x00,0x00,0x06,0xe0,0xc0,0x00,0x00,0x00,0x00,0x06,0xe0,0xc0,0x00,0x00,0x00,0x00,0x06,0xc0,0xc0,0x00,0x00,0x00,0x00,0x06,0x80,0xc0,0x00,0x00,0x00,0x00,0x0e,0x00,0xe0,0x00,0x00,0x00,0x00,0x1c,0x00,0x70,0x00,0x00,0x00,0x00,0x38,0x00,0x7f,0xff,0xff,0xff,0xff,0xf0,0x00};
+    _display->drawBitmap(_display->width() - BATTERY_WIDTH -1, 0,BATTERY_IMAGE, BATTERY_WIDTH, BATTERY_HEIGHT, static_cast<uint16_t>(Color::BLACK));
+    battery_tb.write(TextHelper::serialize_to_font_indices(std::to_string(Battery::get().percentage()) + "%", battery_tb.font()), InitialPosition::Center, Direction::LTR);
+
 }
 
 void Book::draw_cover(const uint16_t start_x, const uint16_t start_y)
@@ -329,7 +338,7 @@ void Book::load_chapter_save()
     build_page_indices(chapter_offset);
 }
 
-TextBox Book::make_header_text_box(const int16_t start_x, const int16_t end_x) const
+TextBox Book::make_header_text_box(const int16_t start_x, const int16_t end_x, const int16_t y_offset, const GFXfont* font) const
 {
     TextBox tb(
         _display,
@@ -337,10 +346,10 @@ TextBox Book::make_header_text_box(const int16_t start_x, const int16_t end_x) c
         0,
         end_x,
         TEXT_POSITION.y,
-        get_font(),
-        2
+        font,
+        1
     );
-
+    tb.setCursor(start_x, y_offset);
     return tb;
 }
 
