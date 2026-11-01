@@ -87,7 +87,7 @@ void Book::render_and_save()
 
 void Book::display_title()
 {
-    static constexpr Vector2 TITLE_POSITION{0, 40};
+    static constexpr Vector2 TITLE_POSITION{0, 25};
     static constexpr Vector2 AUTHOR_POSITION{0, 380};
     static constexpr uint16_t TITLE_TEXT_SIZE = 5;
     static constexpr uint16_t AUTHOR_TEXT_SIZE = 2;
@@ -101,7 +101,7 @@ void Book::display_title()
     title_tb.write(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
     author_tb.write(TextHelper::serialize_to_font_indices(author, get_font()));
     
-    static const Vector2 bitmap_position{(Config::Display::PAGE_WIDTH - static_cast<int16_t>(Config::Display::BITMAP_WIDTH)) / 2, 150};
+    static const Vector2 bitmap_position{(Config::Display::PAGE_WIDTH - static_cast<int16_t>(Config::Display::BITMAP_WIDTH)) / 2, 160};
     draw_cover(bitmap_position.x, bitmap_position.y);
 }
 
