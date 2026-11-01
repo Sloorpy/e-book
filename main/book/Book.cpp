@@ -256,12 +256,8 @@ void Book::display_header()
     static constexpr int16_t HEADER_BASELINE = 12;
 
     TextBox progress_tb = make_header_text_box(0, part_width * 4, HEADER_BASELINE, &RobotoSlab_SemiBold9pt7b);
-    const uint32_t pages_read = (_current_chapter.num - 1) * _current_chapter.pages.size() +
-                     (_current_chapter.page_indicies.empty() ? 0 : _current_chapter.page_indicies.top().end);
-    const uint32_t finished_percentage = (pages_read * 100) / (_current_chapter.pages.size() * _page_manager.chapter_count());
-    printf("pages_read %ld\nall pages %d\nfinished_percentage %ld\n", pages_read,_current_chapter.pages.size() * _page_manager.chapter_count(), finished_percentage);
-    
-    progress_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num) + " | " + std::to_string(finished_percentage) + "%", progress_tb.font()), InitialPosition::Left, Direction::LTR);
+
+    progress_tb.write(TextHelper::serialize_to_font_indices("Chapter: " + std::to_string(_current_chapter.num) + " | " + std::to_string(progress_percentage()) + "%", progress_tb.font()), InitialPosition::Left, Direction::LTR);
     display_battery();
 
     static const unsigned char PROGMEM ICON[] = {0x03,0x5f,0xf0,0x00,0x0f,0xa8,0x3c,0x00,0x2a,0xff,0xfc,0x00,0x5f,0xe0,0x06,0x00,0xf5,0x80,0x02,0x00,0xba,0x88,0x22,0x00,0x68,0x9c,0x72,0x00,0x80,0x92,0x4a,0x08,0x00,0x80,0x02,0x10,0x0f,0x80,0x03,0x78,0x0d,0x47,0xe3,0xd0,0x34,0x60,0x02,0x60,0x08,0x7f,0xfc,0x00,0x00,0x3c,0xe0,0x00,0x00,0xf8,0xf8,0x00,0x01,0x98,0xcc,0x00};
@@ -447,6 +443,30 @@ BookViewState Book::handle_prev_chapter()
     }
 
     return BookViewState::PAGE;
+}
+
+uint8_t Book::progress_percentage() const
+{
+    const uint64_t chapter_count = _page_manager.chapter_count();
+    if (chapter_count == 0 || _current_chapter.num == 0) {
+        return 1;
+    }
+
+    const uint64_t completed_chapters = _current_chapter.num - 1;
+    const uint64_t chapter_start_percentage = completed_chapters * 100 / chapter_count;
+
+    if (_current_chapter.page_indicies.empty()) {
+        return static_cast<uint8_t>(chapter_start_percentage + 1);
+    }
+
+    const PageRange& current_page = _current_chapter.page_indicies.top();
+    if (current_page.end >= _current_chapter.pages.size()) {
+        return static_cast<uint8_t>(static_cast<uint64_t>(_current_chapter.num) * 100 / chapter_count);
+    }
+
+    const uint64_t chapter_progress = static_cast<uint64_t>(current_page.start) * 100 / _current_chapter.pages.size();
+    const uint64_t progress = (completed_chapters * 100 + chapter_progress) / chapter_count;
+    return static_cast<uint8_t>(progress + 1);
 }
 
 void Book::build_page_indices(uint32_t end_offset)

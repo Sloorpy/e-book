@@ -55,6 +55,7 @@ private:
     static uint32_t next_print_size_from(const std::vector<uint8_t>& pages, uint32_t page_start, TextBox& text_box);
     BookViewState handle_next_chapter();
     BookViewState handle_prev_chapter();
+    uint8_t progress_percentage() const;
 
 private:
     const GFXfont* get_font() const;
