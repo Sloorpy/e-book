@@ -3,13 +3,13 @@
 #include "Button.hpp"
 #include "Display.hpp"
 
-class ProgramState 
-{
+class IState {
 protected:
-    explicit ProgramState(std::shared_ptr<Display> display);
+    explicit IState(std::shared_ptr<Display> display) 
+        : _display(display) {}
 
 public:
-    virtual ~ProgramState() = default;
+    virtual ~IState() = default;
 
 public:
     virtual void main() = 0;
@@ -18,7 +18,7 @@ public:
     virtual void on_hold() = 0;
 
 public:
-    std::shared_ptr<Display> get_display();
+    std::shared_ptr<Display> get_display() { return _display; }
     
 protected:
     std::shared_ptr<Display> _display;

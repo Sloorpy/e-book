@@ -50,7 +50,7 @@ extern "C" void app_main(void)
         ESP_LOGI(MAIN_TAG.data(), "Mount SD card");
         SDManager::init();
         ESP_LOGI(MAIN_TAG.data(), "Load book and initialize display");
-        std::unique_ptr<ProgramState> current_state = nullptr;
+        std::unique_ptr<IState> current_state = nullptr;
         current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(SPI::create_display_spi(), Color::WHITE));
 
         ESP_LOGI(MAIN_TAG.data(), "Render initial book state");

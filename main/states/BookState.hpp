@@ -1,10 +1,9 @@
 #pragma once
-#include "ProgramState.hpp"
+#include "IState.hpp"
 
-class BookState final : public ProgramState
-{
+class BookState final : public IState {
 public:
-    explicit BookState(const std::string_view& book_name, std::unique_ptr<ProgramState> prev_state);
+    explicit BookState(const std::string_view& book_name, std::unique_ptr<IState> prev_state);
     explicit BookState(const std::string_view& book_name, std::unique_ptr<Display> display);
     ~BookState() override = default;
 

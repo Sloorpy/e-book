@@ -4,14 +4,14 @@
 
 #include <esp_timer.h>
 
-BookState::BookState(const std::string_view& book_name, std::unique_ptr<ProgramState> prev_state) :
-    ProgramState(prev_state->get_display()),
+BookState::BookState(const std::string_view& book_name, std::unique_ptr<IState> prev_state) :
+    IState(prev_state->get_display()),
     _book(create_book(book_name))
 {}
 
 
 BookState::BookState(const std::string_view& book_name, std::unique_ptr<Display> display) :
-    ProgramState(std::move(display)),
+    IState(std::move(display)),
     _book(create_book(book_name))
 {}
 
