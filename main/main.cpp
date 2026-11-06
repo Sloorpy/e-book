@@ -17,7 +17,7 @@
 #include <memory>
 
 static constexpr std::string_view MAIN_TAG = "Main";
-static constexpr std::string_view BOOK_NAME = "percy_2_heb";
+static constexpr std::string_view BOOK_NAME = "percy_3_heb";
 static constexpr gpio_num_t LIGHT_PIN = GPIO_NUM_22;
 static constexpr gpio_num_t RIGHT = GPIO_NUM_25;
 static constexpr gpio_num_t LEFT = GPIO_NUM_26;
@@ -50,7 +50,7 @@ extern "C" void app_main(void)
         ESP_LOGI(MAIN_TAG.data(), "Mount SD card");
         SDManager::init();
         ESP_LOGI(MAIN_TAG.data(), "Load book and initialize display");
-        std::unique_ptr<ProgramState> current_state = nullptr;
+        std::unique_ptr<IState> current_state = nullptr;
         current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(SPI::create_display_spi(), Color::WHITE));
 
         ESP_LOGI(MAIN_TAG.data(), "Render initial book state");

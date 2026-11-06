@@ -16,7 +16,6 @@ idf_component_register(SRCS
     "ui/Text/Rendering/ScopedDisplayFont.cpp"
     "ui/Text/Support/TextHelper.cpp"
     "ui/Display.cpp"
-    "states/ProgramState.cpp"
     "states/BookState.cpp"
     "system/PageBuffer.cpp"
     "book/PageIter.cpp"
