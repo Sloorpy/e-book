@@ -18,9 +18,6 @@
  * NotoSerif-Regular.ttf SHA256: 9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f
  * NotoSerifHebrew-Regular.ttf SHA256: 789b7e7e3ff4d95a5e105872a385db12c50c08b60ad5b773d25a3bec86621abf
  */
-static constexpr uint8_t Serif22Ascent = 15;
-static constexpr uint8_t Serif22Descent = 4;
-
 static const uint8_t Serif22Bitmaps[] PROGMEM = {
     0xFF, 0xAA, 0x0F, 0xDE, 0xE5, 0x20, 0x13, 0x09, 0x04, 0x8F, 0xF3, 0x21,
     0xB0, 0x98, 0x48, 0xFF, 0x12, 0x19, 0x09, 0x80, 0x10, 0x79, 0x5E, 0xAD,
