@@ -23,7 +23,7 @@ uint32_t Book::next_print_size_from(
     const std::vector<uint8_t>& pages,
     const uint32_t page_start,
     TextBox& text_box
-) {
+) const {
     if (page_start >= pages.size()) {
         return 0;
     }
@@ -40,7 +40,7 @@ uint32_t Book::next_print_size_from(
             pages.begin() + page_start + window_size
         );
 
-        bytes_written = text_box.next_print_size(page_window);
+        bytes_written = text_box.next_print_size(page_window, text_alignment(), _base_direction);
         should_grow_window = bytes_written == window_size && window_size < remaining_size;
 
         if (should_grow_window) {
@@ -53,6 +53,7 @@ uint32_t Book::next_print_size_from(
 
 Book::Book(std::shared_ptr<Display> display, const std::string_view& book_name) : 
     _page_manager(book_name),
+    _base_direction(_page_manager.is_english() ? Direction::LTR : Direction::RTL),
     _current_chapter(BASE_CHAPTER),
     _view_state(BookViewState::BOOK_TITLE),
     _display(display) 
@@ -98,8 +99,8 @@ void Book::display_title()
     TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TITLE_TEXT_SIZE);
     TextBox author_tb = make_text_box(AUTHOR_POSITION.x, AUTHOR_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
 
-    title_tb.write(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center);
-    author_tb.write(TextHelper::serialize_to_font_indices(author, get_font()));
+    title_tb.write(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center, _base_direction);
+    author_tb.write(TextHelper::serialize_to_font_indices(author, get_font()), text_alignment(), _base_direction);
     
     static const Vector2 bitmap_position{(Config::Display::PAGE_WIDTH - static_cast<int16_t>(Config::Display::BITMAP_WIDTH)) / 2, 160};
     draw_cover(bitmap_position.x, bitmap_position.y);
@@ -127,7 +128,7 @@ void Book::display_current_page()
         _current_chapter.pages.begin() + _current_chapter.page_indicies.top().end
     );
 
-    make_page_text_box().write(curr_text, InitialPosition::Right);
+    make_page_text_box().write(curr_text, text_alignment(), _base_direction);
 }
 
 void Book::reset_book()
@@ -245,8 +246,8 @@ void Book::display_chapter_title()
     TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, NUMBER_TEXT_SIZE);    
     TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TITLE_TEXT_SIZE);    
 
-    number_tb.write(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center);
-    title_tb.write(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center);
+    number_tb.write(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center, _base_direction);
+    title_tb.write(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center, _base_direction);
 }
 
 void Book::display_header()
@@ -396,6 +397,11 @@ StateInfo Book::current_state() const
 const GFXfont* Book::get_font() const
 {
     return &hebEng5x7avia;
+}
+
+InitialPosition Book::text_alignment() const
+{
+    return _base_direction == Direction::LTR ? InitialPosition::Left : InitialPosition::Right;
 }
 
 BookViewState Book::handle_next_chapter()

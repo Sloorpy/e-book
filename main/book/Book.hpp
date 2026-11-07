@@ -52,13 +52,14 @@ private:
 private:
     void draw_cover(const uint16_t x, const uint16_t y);
     void build_page_indices(uint32_t end_offset);
-    static uint32_t next_print_size_from(const std::vector<uint8_t>& pages, uint32_t page_start, TextBox& text_box);
+    uint32_t next_print_size_from(const std::vector<uint8_t>& pages, uint32_t page_start, TextBox& text_box) const;
     BookViewState handle_next_chapter();
     BookViewState handle_prev_chapter();
     uint8_t progress_percentage() const;
 
 private:
     const GFXfont* get_font() const;
+    InitialPosition text_alignment() const;
 
 private:
     TextBox make_header_text_box(const int16_t start_x, const int16_t end_x, const int16_t y_offset, const GFXfont* font) const;
@@ -68,6 +69,7 @@ private:
 
 private:
     BookFs _page_manager;
+    const Direction _base_direction;
     Chapter _current_chapter;
     BookViewState _view_state;
 
