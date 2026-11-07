@@ -1,7 +1,7 @@
 #include "Book.hpp"
 #include "Text/Support/TextHelper.hpp"
 #include "Text/Rendering/TextBox.hpp"
-#include "Fonts/hebEng5x7avia.h"
+#include "Fonts/MyFonts/hebEng5x7avia.h"
 #include "Fonts/RobotoSlab_SemiBold9pt7b.h"
 #include "Display.hpp"
 #include "Config.hpp"
