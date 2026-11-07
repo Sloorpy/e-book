@@ -1,6 +1,14 @@
+#pragma once
+#include <stdint.h>
+#include <gfxfont.h>
 #ifndef PROGMEM
 #define PROGMEM
 #endif
+// Measured ink bounds relative to the GFX cursor: y = -1 through 6.
+// Multiply these metrics by the text size, just like xAdvance/yAdvance.
+static constexpr uint8_t hebEng5x7aviaAscent = 1;
+static constexpr uint8_t hebEng5x7aviaDescent = 7;
+
 const uint8_t hebEng5x7aviaBitmaps[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x7A, 0xB4, 0x02, 0xBE, 0xAF, 0xA9, 0x40, 
   0x53, 0xA4, 0xE4, 0xFD, 0x40, 0x06, 0x74, 0x42, 0x2E, 0x60, 0x03, 0xA5, 
