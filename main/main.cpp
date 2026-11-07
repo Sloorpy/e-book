@@ -16,7 +16,7 @@
 #include <memory>
 
 static constexpr std::string_view MAIN_TAG = "Main";
-static constexpr std::string_view BOOK_NAME = "the_stanger";
+static constexpr std::string_view BOOK_NAME = "the_stranger";
 static constexpr gpio_num_t LIGHT_PIN = GPIO_NUM_22;
 static constexpr gpio_num_t RIGHT = GPIO_NUM_25;
 static constexpr gpio_num_t LEFT = GPIO_NUM_26;
