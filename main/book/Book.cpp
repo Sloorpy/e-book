@@ -93,10 +93,10 @@ void Book::display_title()
     static constexpr uint16_t AUTHOR_TEXT_SIZE = 1;
     const std::string title = _page_manager.get_title();
     const std::string author = _page_manager.get_author();
-    static const Vector2 bitmap_position{(Config::Display::PAGE_WIDTH - static_cast<int16_t>(Config::Display::BITMAP_WIDTH)) / 2, 160};
+    static const Vector2 bitmap_position{(Config::Display::WIDTH - static_cast<int16_t>(Config::Display::BITMAP_WIDTH)) / 2, 160};
     
-    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::Display::PAGE_WIDTH, bitmap_position.y, TITLE_TEXT_SIZE);
-    TextBox author_tb = make_text_box(0, 0, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, AUTHOR_TEXT_SIZE);
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::Display::WIDTH, bitmap_position.y, TITLE_TEXT_SIZE);
+    TextBox author_tb = make_text_box(0, 0, Config::Display::WIDTH, Config::Display::HEIGHT, AUTHOR_TEXT_SIZE);
     author_tb.setCursor(0, author_tb.bottom() - author_tb.ink_height());
 
     title_tb.write_to_fit(TextHelper::serialize_to_font_indices(title, get_font()), InitialPosition::Center, _base_direction);
@@ -113,16 +113,16 @@ void Book::no_more_pages()
     static constexpr uint16_t TEXT_SIZE3 = 1;
 
     if (_page_manager.is_english()) {
-        TextBox text_box1 = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE1);
-        TextBox text_box2 = make_text_box(TEXT_POSITION.x + 45, TEXT_POSITION.y + 90, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE2);
-        TextBox text_box3 = make_text_box(0, Config::Display::PAGE_HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE3);
+        TextBox text_box1 = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::Display::WIDTH, Config::Display::HEIGHT, TEXT_SIZE1);
+        TextBox text_box2 = make_text_box(TEXT_POSITION.x + 45, TEXT_POSITION.y + 90, Config::Display::WIDTH, Config::Display::HEIGHT, TEXT_SIZE2);
+        TextBox text_box3 = make_text_box(0, Config::Display::HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::WIDTH, Config::Display::HEIGHT, TEXT_SIZE3);
         text_box1.write(TextHelper::serialize_to_font_indices("The", get_font()), InitialPosition::Left);
         text_box2.write(TextHelper::serialize_to_font_indices("End...", get_font()), InitialPosition::Left);
         text_box3.write(TextHelper::serialize_to_font_indices("Made by Alon Oved", get_font()), InitialPosition::Right);
     }
     else {
-        TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y + 30, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE2);
-        TextBox text_box3 = make_text_box(0, Config::Display::PAGE_HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE3);
+        TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y + 30, Config::Display::WIDTH, Config::Display::HEIGHT, TEXT_SIZE2);
+        TextBox text_box3 = make_text_box(0, Config::Display::HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::WIDTH, Config::Display::HEIGHT, TEXT_SIZE3);
 
         text_box.write(TextHelper::serialize_to_font_indices("הסוף...", get_font()), InitialPosition::Right);
         text_box3.write(TextHelper::serialize_to_font_indices("נוצר ע\"י אלון עובד", get_font()), InitialPosition::Left);
@@ -256,8 +256,8 @@ void Book::display_chapter_title()
     const std::string chapter_num_str = std::to_string(_current_chapter.num);
     const std::string chapter_title = _page_manager.get_chapter_title(_current_chapter.num);
 
-    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, Config::Display::PAGE_WIDTH,TITLE_POSITION.y, NUMBER_TEXT_SIZE);    
-    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TITLE_TEXT_SIZE);    
+    TextBox number_tb = make_text_box(NUMBER_POSITION.x, NUMBER_POSITION.y, Config::Display::WIDTH,TITLE_POSITION.y, NUMBER_TEXT_SIZE);    
+    TextBox title_tb = make_text_box(TITLE_POSITION.x, TITLE_POSITION.y, Config::Display::WIDTH, Config::Display::HEIGHT, TITLE_TEXT_SIZE);    
 
     number_tb.write(TextHelper::serialize_to_font_indices(chapter_num_str, get_font()), InitialPosition::Center, _base_direction);
     title_tb.write_to_fit(TextHelper::serialize_to_font_indices(chapter_title, get_font()), InitialPosition::Center, _base_direction);
@@ -265,7 +265,7 @@ void Book::display_chapter_title()
 
 void Book::display_header()
 {
-    _display->drawLine(0, TEXT_POSITION.y, Config::Display::PAGE_WIDTH, TEXT_POSITION.y, 0);
+    _display->drawLine(0, TEXT_POSITION.y, Config::Display::WIDTH, TEXT_POSITION.y, 0);
     const uint16_t part_width =  _display->width() / 5;
 
     TextBox progress_tb = make_header_text_box(0, part_width * 4, &RobotoSlab_SemiBold9pt7b);
@@ -355,7 +355,7 @@ TextBox Book::make_page_text_box() const
 {
     static constexpr int16_t SPACE_FROM_BORDER = 7;
     return make_text_box(0, TEXT_POSITION.y + SPACE_FROM_BORDER,
-                         Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE);
+                         Config::Display::WIDTH, Config::Display::HEIGHT, TEXT_SIZE);
 }
 
 TextBox Book::make_text_box(int16_t left, int16_t top, int16_t right, int16_t bottom, uint16_t text_size) const
