@@ -153,7 +153,7 @@ size_t TextBox::write_to_fit(
         return 0;
     }
 
-    const uint8_t max_size = 10;
+    const uint8_t max_size = _textsize;
     while (textSize() > 1 && next_print_size(str, pos, base_direction) < str.size()) {
         setTextSize(textSize() - 1);
     }
