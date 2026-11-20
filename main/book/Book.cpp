@@ -110,17 +110,23 @@ void Book::no_more_pages()
     static constexpr Vector2 TEXT_POSITION{10, 60};
     static constexpr uint16_t TEXT_SIZE1 = 6;
     static constexpr uint16_t TEXT_SIZE2 = 5;
+    static constexpr uint16_t TEXT_SIZE3 = 1;
 
     
-    if (_page_manager.is_english()) {
+    if (!_page_manager.is_english()) {
         TextBox text_box1 = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE1);
         TextBox text_box2 = make_text_box(TEXT_POSITION.x + 45, TEXT_POSITION.y + 90, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE2);
+        TextBox text_box3 = make_text_box(0, Config::Display::PAGE_HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE3);
         text_box1.write(TextHelper::serialize_to_font_indices("The", get_font()), InitialPosition::Left);
         text_box2.write(TextHelper::serialize_to_font_indices("End...", get_font()), InitialPosition::Left);
+        text_box3.write(TextHelper::serialize_to_font_indices("Made by Alon Oved", get_font()), InitialPosition::Right);
     }
     else {
-        TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE2);
+        TextBox text_box = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y + 30, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE2);
+        TextBox text_box3 = make_text_box(0, Config::Display::PAGE_HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE3);
+
         text_box.write(TextHelper::serialize_to_font_indices("הסוף...", get_font()), InitialPosition::Right);
+        text_box3.write(TextHelper::serialize_to_font_indices("נוצר ע\"י אלון עובד", get_font()), InitialPosition::Left);
     }
 
 }
