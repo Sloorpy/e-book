@@ -112,8 +112,7 @@ void Book::no_more_pages()
     static constexpr uint16_t TEXT_SIZE2 = 5;
     static constexpr uint16_t TEXT_SIZE3 = 1;
 
-    
-    if (!_page_manager.is_english()) {
+    if (_page_manager.is_english()) {
         TextBox text_box1 = make_text_box(TEXT_POSITION.x, TEXT_POSITION.y, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE1);
         TextBox text_box2 = make_text_box(TEXT_POSITION.x + 45, TEXT_POSITION.y + 90, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE2);
         TextBox text_box3 = make_text_box(0, Config::Display::PAGE_HEIGHT - get_font()->yAdvance * TEXT_SIZE3, Config::Display::PAGE_WIDTH, Config::Display::PAGE_HEIGHT, TEXT_SIZE3);
