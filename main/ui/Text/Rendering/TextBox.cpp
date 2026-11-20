@@ -143,6 +143,26 @@ size_t TextBox::write(
     return page.consumed_bytes;
 }
 
+size_t TextBox::write_to_fit(
+    const std::vector<uint8_t>& str,
+    InitialPosition pos,
+    Direction base_direction
+)
+{
+    if (!_font || str.empty()) {
+        return 0;
+    }
+
+    const uint8_t max_size = 10;
+    while (textSize() > 1 && next_print_size(str, pos, base_direction) < str.size()) {
+        setTextSize(textSize() - 1);
+    }
+
+    const size_t written = write(str, pos, base_direction);
+    setTextSize(max_size);
+    return written;
+}
+
 size_t TextBox::next_print_size(
     const std::vector<uint8_t>& str,
     const InitialPosition pos,

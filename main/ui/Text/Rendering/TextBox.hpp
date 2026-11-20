@@ -41,6 +41,12 @@ public:
         Direction base_direction = Direction::RTL
     );
 
+    size_t write_to_fit(
+        const std::vector<uint8_t>& str,
+        InitialPosition pos = InitialPosition::Right,
+        Direction base_direction = Direction::RTL
+    );
+
     size_t next_print_size(
         const std::vector<uint8_t>& str,
         InitialPosition pos = InitialPosition::Right,
