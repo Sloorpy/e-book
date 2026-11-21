@@ -24,6 +24,7 @@ public:
     TextBox(uint16_t width, uint16_t height, const GFXfont* font, uint16_t text_size = 1);
 
 public:
+    // Absolute left and top of the text area. Right and bottom are exclusive.
     void setCursor(Vector2 pos);
     void setCursor(int16_t x, int16_t y);
     void resetCursor();
@@ -35,6 +36,12 @@ public:
 
 public:
     size_t write(
+        const std::vector<uint8_t>& str,
+        InitialPosition pos = InitialPosition::Right,
+        Direction base_direction = Direction::RTL
+    );
+
+    size_t write_to_fit(
         const std::vector<uint8_t>& str,
         InitialPosition pos = InitialPosition::Right,
         Direction base_direction = Direction::RTL
@@ -54,24 +61,23 @@ public:
     int16_t left() const { return _left; }
     int16_t bottom() const { return _bottom; }
     int16_t cursor_y() const { return _cursor.y; }
-    int16_t line_start_x() const { return _left; }
+    int16_t line_start_x() const { return _cursor.x; }
 
 public:
+    int line_height() const;
+    int ink_height() const;
     int16_t available_width() const;
     int16_t width() const;
     
 private:
     TextPage build_page_layout(const std::vector<uint8_t>& str, Direction base_direction) const;
-    void write_token(const ResolvedToken& token);
-    void write_line(const Line& line , const InitialPosition pos);
+    void write_line(Adafruit_GFX& canvas, const Line& line, InitialPosition pos);
+    int line_pen_x(int line_width, InitialPosition pos) const;
 
-    void set_line_cursor(int16_t line_width, InitialPosition pos);
-    int16_t glyph_advance(const GFXglyph& glyph) const;
-    void draw_char(const Vector2 position, const char letter);
-    void write_word(const Word& word);
-    void write_legacy_line(const LegacyLine& line, InitialPosition pos);
-    int16_t line_height() const;
-    bool bottom_reached() const;
+    int _glyph_top = 0;
+    int _glyph_height = 0;
+    int _left_overhang = 0;
+    int _right_overhang = 0;
 
 private:
     std::shared_ptr<Display> _display;

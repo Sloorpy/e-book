@@ -3,7 +3,7 @@ idf_component_register(SRCS
     "system/Button.cpp"
     "system/File.cpp"
     "system/SDManager.cpp"
-    "system/SPI.cpp"
+    "hardware/SPI.cpp"
     "book/Book.cpp"
     "book/BookFs.cpp"
     "ui/Text/Legacy/BookString.cpp"
@@ -19,10 +19,10 @@ idf_component_register(SRCS
     "states/BookState.cpp"
     "system/PageBuffer.cpp"
     "book/PageIter.cpp"
-    "system/AdcHandle.cpp"
-    "system/AdcReader.cpp"
+    "hardware/AdcHandle.cpp"
+    "hardware/AdcReader.cpp"
     "system/Battery.cpp"
-    INCLUDE_DIRS "." "system" "ui" "book"
+    INCLUDE_DIRS "." "system" "ui" "book" "hardware"
     REQUIRES Adafruit-GFX esp_driver_spi fatfs sdmmc
     PRIV_REQUIRES esp_timer esp_adc
 )
