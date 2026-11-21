@@ -16,6 +16,8 @@ idf_component_register(SRCS
     "ui/Text/Rendering/ScopedDisplayFont.cpp"
     "ui/Text/Support/TextHelper.cpp"
     "ui/Display.cpp"
+    "ui/core/UIButton.cpp"
+    "ui/ButtonsArray.cpp"
     "states/BookState.cpp"
     "system/PageBuffer.cpp"
     "book/PageIter.cpp"
@@ -26,3 +28,5 @@ idf_component_register(SRCS
     REQUIRES Adafruit-GFX esp_driver_spi fatfs sdmmc
     PRIV_REQUIRES esp_timer esp_adc
 )
+
+target_sources(${COMPONENT_LIB} PRIVATE "ui/ButtonsArray.hpp")
