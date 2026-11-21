@@ -9,6 +9,8 @@
 #include <string>
 #include <gfxfont.h>
 
+enum class VerticalAlignment : uint8_t { Top, Center };
+
 class TextBox {
 public:
     TextBox(std::shared_ptr<Display> display,
@@ -38,13 +40,15 @@ public:
     size_t write(
         const std::vector<uint8_t>& str,
         InitialPosition pos = InitialPosition::Right,
-        Direction base_direction = Direction::RTL
+        Direction base_direction = Direction::RTL,
+        VerticalAlignment vertical = VerticalAlignment::Top
     );
 
     size_t write_to_fit(
         const std::vector<uint8_t>& str,
         InitialPosition pos = InitialPosition::Right,
-        Direction base_direction = Direction::RTL
+        Direction base_direction = Direction::RTL,
+        VerticalAlignment vertical = VerticalAlignment::Top
     );
 
     size_t next_print_size(

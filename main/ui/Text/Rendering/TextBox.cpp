@@ -122,13 +122,20 @@ void TextBox::next_line(InitialPosition pos, int16_t line_width)
 size_t TextBox::write(
     const std::vector<uint8_t>& str,
     const InitialPosition pos,
-    const Direction base_direction
+    const Direction base_direction,
+    VerticalAlignment vertical
 ) {
     if (_font == nullptr) {
         return 0;
     }
 
     TextPage page = build_page_layout(str, base_direction);
+    if (vertical == VerticalAlignment::Center && !page.lines.empty()) {
+        const int line_count = static_cast<int>(page.lines.size());
+        const int block_height = ink_height() + (line_count - 1) * line_height();
+        _cursor.y += std::max(0, (_bottom - _cursor.y - block_height) / 2);
+    }
+
     if (_display) {
         TextCanvas canvas(*_display, _cursor.x, _top, _right - _cursor.x, _bottom - _top);
         canvas.setFont(_font);
@@ -146,7 +153,8 @@ size_t TextBox::write(
 size_t TextBox::write_to_fit(
     const std::vector<uint8_t>& str,
     InitialPosition pos,
-    Direction base_direction
+    Direction base_direction,
+    VerticalAlignment vertical
 )
 {
     if (!_font || str.empty()) {
@@ -158,7 +166,7 @@ size_t TextBox::write_to_fit(
         setTextSize(textSize() - 1);
     }
 
-    const size_t written = write(str, pos, base_direction);
+    const size_t written = write(str, pos, base_direction, vertical);
     setTextSize(max_size);
     return written;
 }
