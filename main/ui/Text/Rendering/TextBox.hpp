@@ -9,7 +9,7 @@
 #include <string>
 #include <gfxfont.h>
 
-enum class VerticalAlignment : uint8_t { Top, Center };
+enum class VerticalAlignment : uint8_t { Top, Center, Bottom };
 
 class TextBox {
 public:
@@ -23,6 +23,8 @@ public:
            );
 
 public:
+    TextBox(CanvasRegion& region, int16_t left, int16_t top, int16_t right, int16_t bottom,
+            const GFXfont* font, uint16_t text_size = 1);
     TextBox(uint16_t width, uint16_t height, const GFXfont* font, uint16_t text_size = 1);
 
 public:
@@ -34,7 +36,7 @@ public:
 public:
     void setFont(const GFXfont* font);
     void setTextSize(uint8_t size);
-    void setTextColor(uint8_t color);
+    void setTextColor(Color color);
 
 public:
     size_t write(
@@ -75,7 +77,9 @@ public:
     
 private:
     TextPage build_page_layout(const std::vector<uint8_t>& str, Direction base_direction) const;
-    void write_line(Adafruit_GFX& canvas, const Line& line, InitialPosition pos);
+    void draw_page(CanvasRegion& target, const TextPage& page, InitialPosition pos) const;
+    void write_line(CanvasRegion& canvas, const Line& line, InitialPosition pos,
+                    int16_t x_offset, int baseline) const;
     int line_pen_x(int line_width, InitialPosition pos) const;
 
     int _glyph_top = 0;
@@ -85,6 +89,7 @@ private:
 
 private:
     std::shared_ptr<Display> _display;
+    CanvasRegion* _region = nullptr;
     const GFXfont* _font;
 
 private:

@@ -4,27 +4,6 @@
 #include <algorithm>
 #include <utility>
 
-namespace {
-// GFX draws custom glyphs relative to a baseline. Limit its pixel writes to
-// the text area, including when one unbreakable word is wider than the box.
-class TextCanvas final : public Adafruit_GFX {
-public:
-    TextCanvas(Display& display, int16_t left, int16_t top, int16_t width, int16_t height)
-        : Adafruit_GFX(width, height), _display(display), _left(left), _top(top) {}
-
-    void drawPixel(int16_t x, int16_t y, uint16_t color) override {
-        if (x >= 0 && x < width() && y >= 0 && y < height()) {
-            _display.drawPixel(_left + x, _top + y, color);
-        }
-    }
-
-private:
-    Display& _display;
-    int16_t _left;
-    int16_t _top;
-};
-}
-
 TextBox::TextBox(std::shared_ptr<Display> display,
                  int16_t left,
                  int16_t top,
@@ -44,6 +23,13 @@ TextBox::TextBox(std::shared_ptr<Display> display,
 {
     setFont(font);
     resetCursor();
+}
+
+TextBox::TextBox(CanvasRegion& region, int16_t left, int16_t top, int16_t right, int16_t bottom,
+                 const GFXfont* font, uint16_t text_size)
+    : TextBox(nullptr, left, top, right, bottom, font, text_size)
+{
+    _region = &region;
 }
 
 TextBox::TextBox(uint16_t width, uint16_t height, const GFXfont *font, uint16_t text_size) :
@@ -87,8 +73,8 @@ void TextBox::setTextSize(uint8_t size) {
     _textsize = size;
 }
 
-void TextBox::setTextColor(uint8_t color) {
-    _text_color = color;
+void TextBox::setTextColor(Color  color) {
+    _text_color = static_cast<uint8_t>(color);
 }
 
 int TextBox::line_height() const
@@ -130,20 +116,22 @@ size_t TextBox::write(
     }
 
     TextPage page = build_page_layout(str, base_direction);
-    if (vertical == VerticalAlignment::Center && !page.lines.empty()) {
+    if (vertical != VerticalAlignment::Top && !page.lines.empty()) {
         const int line_count = static_cast<int>(page.lines.size());
         const int block_height = ink_height() + (line_count - 1) * line_height();
-        _cursor.y += std::max(0, (_bottom - _cursor.y - block_height) / 2);
+        const int32_t free_height = std::max(0, _bottom - _cursor.y - block_height);
+        _cursor.y += vertical == VerticalAlignment::Center ? free_height / 2 : free_height;
     }
 
-    if (_display) {
-        TextCanvas canvas(*_display, _cursor.x, _top, _right - _cursor.x, _bottom - _top);
-        canvas.setFont(_font);
-        for (const Line& line : page.lines) {
-            write_line(canvas, line, pos);
-            next_line();
+    if (!page.lines.empty()) {
+        if (_region) {
+            draw_page(*_region, page, pos);
+        } else if (_display) {
+            const uint16_t width = static_cast<uint16_t>(_display->width());
+            const uint16_t height = static_cast<uint16_t>(_display->height());
+            CanvasRegion screen = _display->create_canvas({0, 0, width, height});
+            draw_page(screen, page, pos);
         }
-    } else {
         _cursor.y += page.lines.size() * line_height();
     }
 
@@ -194,26 +182,44 @@ TextPage TextBox::build_page_layout(
     return TextLayout::build_page(str, base_direction, *this);
 }
 
-void TextBox::write_line(Adafruit_GFX& canvas, const Line& line, InitialPosition pos)
+void TextBox::draw_page(CanvasRegion& target, const TextPage& page, InitialPosition pos) const
 {
-    int x = line_pen_x(TextHelper::line_width(line, *this), pos);
-    const int baseline = _cursor.y - _top - _glyph_top * _textsize;
-    auto draw = [&](uint8_t byte) {
-        const GFXglyph* glyph = TextHelper::get_char_font(byte, _font);
-        if (glyph) {
+    const int16_t left = std::max<int16_t>(0, _cursor.x);
+    const int16_t top = std::max<int16_t>(0, _top);
+    const int16_t right = std::min(_right, target.width());
+    const int16_t bottom = std::min(_bottom, target.height());
+    if (left >= right || top >= bottom) {
+        return;
+    }
+
+    CanvasRegion canvas = target.subregion({static_cast<uint16_t>(left), static_cast<uint16_t>(top),
+                                            static_cast<uint16_t>(right - left), static_cast<uint16_t>(bottom - top)});
+    canvas.setFont(_font);
+    int baseline = _cursor.y - top - _glyph_top * _textsize;
+    for (const Line& line : page.lines) {
+        write_line(canvas, line, pos, _cursor.x - left, baseline);
+        baseline += line_height();
+    }
+}
+
+void TextBox::write_line(CanvasRegion& canvas, const Line& line, InitialPosition pos,
+                         int16_t x_offset, int baseline) const
+{
+    int x = x_offset + line_pen_x(TextHelper::line_width(line, *this), pos);
+    for (const ResolvedToken& token : line.tokens) {
+        const std::vector<uint8_t>& bytes = token.token.bytes;
+        for (std::size_t i = 0; i < bytes.size(); ++i) {
+            const std::size_t index = token.direction == Direction::LTR ? bytes.size() - 1 - i : i;
+            const uint8_t byte = bytes[index];
+            const GFXglyph* glyph = TextHelper::get_char_font(byte, _font);
+            if (!glyph) {
+                continue;
+            }
             x -= glyph->xAdvance * _textsize;
             if (x + (glyph->xOffset + glyph->width) * _textsize > 0 &&
                 x + glyph->xOffset * _textsize < canvas.width()) {
                 canvas.drawChar(x, baseline, byte, _text_color, static_cast<uint8_t>(Color::WHITE), _textsize);
             }
-        }
-    };
-    for (const ResolvedToken& token : line.tokens) {
-        const auto& bytes = token.token.bytes;
-        if (token.direction == Direction::LTR) {
-            std::for_each(bytes.rbegin(), bytes.rend(), draw);
-        } else {
-            std::for_each(bytes.begin(), bytes.end(), draw);
         }
     }
 }
