@@ -6,6 +6,7 @@
 #include "Display.hpp"
 #include "SDManager.hpp"
 #include "states/BookState.hpp"
+#include "states/HomeState.hpp"
 #include "Text/Rendering/TextBox.hpp"
 #include "Text/Support/TextHelper.hpp"
 
@@ -50,9 +51,10 @@ extern "C" void app_main(void)
         SDManager::init();
         ESP_LOGI(MAIN_TAG.data(), "Load book and initialize display");
         std::unique_ptr<IState> current_state = nullptr;
-        current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(SPI::create_display_spi(), Color::WHITE));
+        //current_state = std::make_unique<BookState>(BOOK_NAME, std::make_unique<Display>(SPI::create_display_spi(), Color::WHITE));
+        current_state = std::make_unique<HomeState>(std::make_unique<Display>(SPI::create_display_spi(), Color::WHITE));
 
-        ESP_LOGI(MAIN_TAG.data(), "Render initial book state");
+        ESP_LOGI(MAIN_TAG.data(), "Render initial home state");
         current_state->main();
         
         Button right_button(RIGHT);

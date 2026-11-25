@@ -20,6 +20,7 @@ idf_component_register(SRCS
     "ui/core/HomeButton.cpp"
     "ui/ButtonsArray.cpp"
     "states/BookState.cpp"
+    "states/HomeState.cpp"
     "system/PageBuffer.cpp"
     "book/PageIter.cpp"
     "hardware/AdcHandle.cpp"
