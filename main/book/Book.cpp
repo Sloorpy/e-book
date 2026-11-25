@@ -2,6 +2,10 @@
 #include "Text/Support/TextHelper.hpp"
 #include "Text/Rendering/TextBox.hpp"
 #include "Fonts/MyFonts/Serif24.h"
+#include "Fonts/MyFonts/DavidLibre20.h"
+#include "Fonts/MyFonts/DavidLibre22.h"
+#include "Fonts/MyFonts/DavidLibre23.h"
+#include "Fonts/MyFonts/DavidLibre24.h"
 #include "Fonts/RobotoSlab_SemiBold9pt7b.h"
 #include "Display.hpp"
 #include "Config.hpp"
@@ -14,6 +18,8 @@
 #include <algorithm>
 
 static constexpr char TAG[] = "Book";
+// Choose DavidLibre20, DavidLibre22, DavidLibre23, or DavidLibre24.
+static constexpr const GFXfont* HEBREW_BOOK_FONT = &DavidLibre23;
 static const Chapter BASE_CHAPTER{{}, {}, "", 0};
 
 static constexpr Vector2 TEXT_POSITION{0, 21};
@@ -383,7 +389,7 @@ StateInfo Book::current_state() const
 
 const GFXfont* Book::get_font() const
 {
-    return &Serif24;
+    return _base_direction == Direction::RTL ? HEBREW_BOOK_FONT : &Serif24;
 }
 
 InitialPosition Book::text_alignment() const
