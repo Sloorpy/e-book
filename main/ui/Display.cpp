@@ -185,6 +185,14 @@ void Display::write_ram_region(const DisplayCommand command, uint16_t x_start, u
     gpio_set_level(PIN_DC, 0);
 }
 
+CanvasRegion Display::create_canvas(Rect bounds) &
+{
+    if (!bounds.fits_within(width(), height())) {
+        throw std::runtime_error("Canvas bounds must have positive dimensions and fit within the display");
+    }
+    return CanvasRegion(*this, bounds);
+}
+
 void Display::fill_screen(const Color color)
 {
     GFXcanvas1::fillScreen(static_cast<uint8_t>(color));

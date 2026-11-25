@@ -1,16 +1,12 @@
 #pragma once
 #include "SPI.hpp"
+#include "core/CanvasRegion.hpp"
 #include "Adafruit_GFX.h"
 
 #include <stdint.h>
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <memory>
-
-struct Vector2 {
-    int16_t x;
-    int16_t y;
-};
 
 enum class Color : uint8_t 
 {
@@ -40,6 +36,7 @@ public:
     ~Display();
 
 public: 
+    CanvasRegion create_canvas(Rect bounds)&;
     void update();
     void full_partial_update();
     void partial_update(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h);

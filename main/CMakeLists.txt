@@ -16,6 +16,7 @@ idf_component_register(SRCS
     "ui/Text/Rendering/ScopedDisplayFont.cpp"
     "ui/Text/Support/TextHelper.cpp"
     "ui/Display.cpp"
+    "ui/core/CanvasRegion.cpp"
     "ui/core/UIButton.cpp"
     "ui/ButtonsArray.cpp"
     "states/BookState.cpp"
