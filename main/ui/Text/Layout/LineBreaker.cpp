@@ -324,36 +324,21 @@ private:
 
     bool page_full() const
     {
-        if (line_height() <= 0) {
-            return true;
-        }
-
-        return _cursor.y > _text_box.bottom();
-    }
-
-    int16_t line_height() const
-    {
-        const GFXfont* font = _text_box.font();
-        if (font == nullptr) {
-            return 0;
-        }
-
-        return static_cast<int16_t>(_text_box.textSize()) *
-               static_cast<int16_t>(font->yAdvance);
+        return _text_box.line_height() <= 0 || _text_box.available_width() <= 0 ||
+               _cursor.y + _text_box.ink_height() > _text_box.bottom();
     }
 
     bool should_start_new_line(const std::size_t width) const
     {
         return !_current_groups.empty() &&
-               _text_box.width() > 0 &&
-               static_cast<std::size_t>(_cursor.x) + width > static_cast<std::size_t>(_text_box.width());
+               static_cast<std::size_t>(_cursor.x) + width > static_cast<std::size_t>(_text_box.available_width());
     }
 
     void push_current_line()
     {
         trim_trailing_spaces();
         _lines.push_back(finalize_line(std::move(_current_groups), _current_line_consumed_bytes));
-        _cursor.y += line_height();
+        _cursor.y += _text_box.line_height();
 
         _current_groups = {};
         _current_line_consumed_bytes = 0;

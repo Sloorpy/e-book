@@ -155,6 +155,26 @@ std::vector<uint8_t> BookFs::cover_bitmap()
     }
 }
 
+bool BookFs::is_english() const
+{
+    const std::string title = get_title();
+
+    if (title.empty()) {
+        throw std::runtime_error("Book title is empty");
+    }
+
+    for (const unsigned char letter : title) {
+        if (TextHelper::is_english_char(letter)) {
+            return true;
+        }
+        if (TextHelper::is_hebrew_utf8_prefix(letter)) {
+            return false;
+        }
+    }
+
+    return false;
+}
+
 std::string BookFs::book_root_path() const
 {
     std::string path;

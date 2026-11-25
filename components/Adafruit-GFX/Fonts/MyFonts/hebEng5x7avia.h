@@ -1,3 +1,6 @@
+#pragma once
+#include <stdint.h>
+#include <gfxfont.h>
 #ifndef PROGMEM
 #define PROGMEM
 #endif
