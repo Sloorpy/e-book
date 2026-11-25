@@ -17,7 +17,7 @@ idf_component_register(SRCS
     "ui/Text/Support/TextHelper.cpp"
     "ui/Display.cpp"
     "ui/core/CanvasRegion.cpp"
-    "ui/core/UIButton.cpp"
+    "ui/core/HomeButton.cpp"
     "ui/ButtonsArray.cpp"
     "states/BookState.cpp"
     "system/PageBuffer.cpp"

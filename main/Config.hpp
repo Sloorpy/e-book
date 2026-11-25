@@ -13,6 +13,10 @@ namespace Config {
     }
    
 
+    namespace Home {
+        constexpr uint16_t ROW_HEIGHT = 40;
+    }
+
     namespace Battery {
         static constexpr adc_channel_t ADC_CHANNEL = ADC_CHANNEL_6;
         static constexpr uint32_t FULL_MV = 4200; 

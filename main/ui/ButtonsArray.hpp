@@ -1,29 +1,33 @@
 #pragma once
-#include "core/UIButton.hpp"
+
+#include "core/HomeButton.hpp"
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
+#include <optional>
 
 class ButtonsArray final {
 private:
-    static constexpr size_t ARRAY_SIZE = 3;
-public:
-    explicit ButtonsArray( std::array<UIButton, ARRAY_SIZE> buttons);
+    static constexpr uint16_t button_width = 80;
+    static constexpr uint16_t button_radius = 3;
+    static constexpr uint16_t button_gap = 3;
 
 public:
-    const std::array<UIButton, ARRAY_SIZE>& buttons() const { return _array; }
+    enum class ButtonKind : uint8_t { Settings, Books, Statistics };
 
-    const UIButton& next();
-    const UIButton& prev();
-    const UIButton& head();
-    const UIButton& peak_next();
-    const UIButton& peak_prev();
+    ButtonsArray();
+    ButtonKind current() const { return static_cast<ButtonKind>(_current); }
+    bool next();
+    bool prev();
+    void draw(CanvasRegion& row);
+    bool select();
 
-private: 
-    size_t prev_index();
-    size_t next_index();
-    
 private:
-    std::array<UIButton, ARRAY_SIZE> _array;
-    size_t _current_index;
+    using Buttons = std::array<HomeButton, 3>;
+    static Buttons init_buttons();
+
+    Buttons _buttons;
+    std::size_t _current = static_cast<std::size_t>(ButtonKind::Books);
+    std::optional<size_t> _selected_index;
 };
