@@ -22,21 +22,21 @@ void BookState::main()
     _display->update();
 }
 
-void BookState::on_click()
+void BookState::on_right_click()
 {
     _display->fill_screen(Color::WHITE);
     _book->next_page();
     _display->full_partial_update();
 }
 
-void BookState::on_double_click()
+void BookState::on_left_click()
 {
     _display->fill_screen(Color::WHITE);
     _book->prev_page();
     _display->full_partial_update();
 }
 
-void BookState::on_hold()
+void BookState::on_middle_click()
 {
     _display->fill_screen(Color::WHITE);
     _book->reset_book();

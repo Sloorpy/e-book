@@ -9,9 +9,9 @@ public:
 
 public:
     virtual void main() override;
-    virtual void on_click() override;
-    virtual void on_double_click() override;
-    virtual void on_hold() override;   
+    virtual void on_right_click() override;
+    virtual void on_left_click() override;
+    virtual void on_middle_click() override;
     
 private:
     std::unique_ptr<Book> create_book(const std::string_view& book_name);

@@ -73,7 +73,7 @@ extern "C" void app_main(void)
             const Button::Event middle_event = middle_button.get_state();
             if (middle_event == Button::Event::Click) {
                     ESP_LOGI(TAG, "Middle click");
-                    current_state->on_hold();
+                    current_state->on_middle_click();
             }
 
             else if (middle_event == Button::Event::LongPress) {
@@ -83,12 +83,12 @@ extern "C" void app_main(void)
 
             else if (right_button.get_state() == Button::Event::Click) {
                     ESP_LOGI(TAG, "Right click");
-                    current_state->on_click();
+                    current_state->on_right_click();
             }
 
             else if (left_button.get_state() == Button::Event::Click) {
                     ESP_LOGI(TAG, "Left click");
-                    current_state->on_double_click();
+                    current_state->on_left_click();
             }
 
             vTaskDelay(pdMS_TO_TICKS(10));
